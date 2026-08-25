@@ -3,16 +3,16 @@ from datetime import time
 class franjahoraria:
 
     FRANJAS_VALIDAS = {
-        "1": "Mañana",
-        "2": "Tarde",
-        "3": "Noche"
+        1: "Mañana",
+        2: "Tarde",
+        3: "Noche"
     }
 
     def __init__(self, id_franja: int, descripcion:str, hora_inicio: time, hora_fin: time):
         self.id_franja = id_franja
         self.descripcion = descripcion
         self.hora_inicio = hora_inicio
-        self.hora_fin = hora_fin
+        self.hora_fin = hora_fin 
 
     def validar_hora(self):
         if self.hora_inicio == self.hora_fin:
