@@ -3,7 +3,7 @@ from datetime import date
 
 class Trabajador:
 
-    def _init_(self, id_trabajador: int, nombre: str,apellido: str, fecha_nacimiento:date,max_horas_semanales: float):
+    def __init__(self, id_trabajador: int, nombre: str,apellido: str, fecha_nacimiento:date,max_horas_semanales: float):
         self.id_trabajador = id_trabajador
         self.nombre = nombre
         self.apellido=apellido
@@ -34,4 +34,50 @@ class Trabajador:
             return True 
 
 
-    
+    from datetime import date
+from credencial import Credencial
+
+
+class Trabajador:
+    def __init__(self, id_trabajador: int, nombre: str, apellido: str,
+                 fecha_nacimiento: date, max_horas_semanales: float):
+        self.id_trabajador = id_trabajador
+        self.nombre = nombre
+        self.apellido = apellido
+        self.fecha_nacimiento = fecha_nacimiento
+        self.max_horas_semanales = max_horas_semanales
+        self.horas_trabajadas = 0.0
+        self.habilidades = []
+        self.credenciales = []
+
+    def agregar_credencial(self, credencial: Credencial):
+        self.credenciales.append(credencial)
+
+    def agregar_habilidad(self, habilidad: str):
+        self.habilidades.append(habilidad)
+
+    def tiene_habilidades(self, habilidades_requeridas: list):
+        # recorrer habilidades_requeridas y devolver False si alguna no está en self.habilidades
+        pass
+
+    def tiene_credencial_activa(self, nombre_credencial: str, fecha: date):
+        # recorrer self.credenciales buscando una con ese nombre y que credencial.esta_activa(fecha) sea True
+        pass
+
+    def credenciales_activas(self, credenciales_requeridas: list, fecha: date):
+        # para cada nombre en credenciales_requeridas, usar tiene_credencial_activa(nombre, fecha); si alguno da False, devolver False
+        pass
+
+    def agregar_horas(self, horas: float):
+        self.horas_trabajadas += horas
+
+    def resetear_horas_semanales(self):
+        # reestablecer self.horas_trabajadas a 0
+        pass
+
+    def excede_horas(self, horas: float):
+        if (self.horas_trabajadas + horas) > self.max_horas_semanales:
+            return True
+        return False
+        #agregar  raise_error 
+        
