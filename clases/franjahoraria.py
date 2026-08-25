@@ -1,6 +1,6 @@
 from datetime import time
 
-class franjahoraria:
+class FranjaHoraria:
 
     FRANJAS_VALIDAS = {
         "1": "Mañana",
