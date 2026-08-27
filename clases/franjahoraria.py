@@ -1,4 +1,6 @@
 from datetime import time
+from enum import Enum
+
 
 class FranjaHoraria:
 
@@ -8,11 +10,18 @@ class FranjaHoraria:
         3: "Noche"
     }
 
-    def __init__(self, id_franja: int, descripcion:str, hora_inicio: time, hora_fin: time):
+
+    def __init__(self, id_franja: int, descripcion: str, hora_inicio: time, hora_fin: time):
+
         self.id_franja = id_franja
         self.descripcion = descripcion
         self.hora_inicio = hora_inicio
-        self.hora_fin = hora_fin 
+        self.hora_fin = hora_fin
+
+        #si llamas a estos dos metodos, cuando creas el objeto se verifica automaticamente la hora y franja horaria
+        self.validar_hora()
+        self.validar_franja()
+
 
     def validar_hora(self):
         if self.hora_inicio == self.hora_fin:

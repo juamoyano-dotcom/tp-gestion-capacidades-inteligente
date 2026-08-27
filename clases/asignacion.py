@@ -1,7 +1,6 @@
 from datetime import date
 from trabajador import Trabajador
 from franjahoraria import FranjaHoraria
-# from labor import Labor  
 
 
 class Asignacion:
