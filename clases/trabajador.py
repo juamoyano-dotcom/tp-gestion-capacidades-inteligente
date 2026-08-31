@@ -1,4 +1,4 @@
-from credencial import Credencial 
+from .credencial import Credencial 
 from datetime import date
 
 class Trabajador:

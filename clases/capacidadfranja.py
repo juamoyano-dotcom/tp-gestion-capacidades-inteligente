@@ -1,5 +1,5 @@
-from sectortrabajo import SectorTrabajo
-from franjahoraria import FranjaHoraria
+from .sectortrabajo import SectorTrabajo
+from .franjahoraria import FranjaHoraria
 
 
 class CapacidadFranjaArea:

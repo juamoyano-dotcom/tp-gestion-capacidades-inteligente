@@ -1,5 +1,5 @@
 from datetime import date
-from asignacion import Asignacion
+from .asignacion import Asignacion
 
 
 class SistemaGestion:

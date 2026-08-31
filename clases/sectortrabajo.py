@@ -1,6 +1,6 @@
 from datetime import date
 from typing import List
-from trabajador import Trabajador
+from .trabajador import Trabajador
 
 class SectorTrabajo:
 

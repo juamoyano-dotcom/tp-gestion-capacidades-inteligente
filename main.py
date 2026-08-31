@@ -1,3 +1,15 @@
+from clases import (
+    Asignacion, 
+    CapacidadFranjaArea, 
+    Credencial, 
+    FranjaHoraria, 
+    Labor, 
+    SectorTrabajo, 
+    SistemaGestion, 
+    Supervisor, 
+    Trabajador
+)
+
 # Tu implementacion va aqui
 def hola_mundo():
     return "hola_mundo"

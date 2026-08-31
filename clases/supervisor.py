@@ -1,5 +1,5 @@
-from trabajador import Trabajador
-from asignacion import Asignacion
+from .trabajador import Trabajador
+from .asignacion import Asignacion
 
 
 class Supervisor(Trabajador):

@@ -1,6 +1,6 @@
 from datetime import date
-from trabajador import Trabajador
-from sectortrabajo import SectorTrabajo
+from .trabajador import Trabajador
+from .sectortrabajo import SectorTrabajo
 
 
 class Labor:

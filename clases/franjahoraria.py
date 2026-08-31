@@ -26,9 +26,9 @@ class FranjaHoraria:
         self.validar_hora()
 
 
-def validar_hora(self): 
-    if self.hora_inicio == self.hora_fin: 
-        raise ValueError( "La hora de inicio debe ser distinta a la hora de fin." )
+    def validar_hora(self): 
+        if self.hora_inicio == self.hora_fin: 
+            raise ValueError( "La hora de inicio debe ser distinta a la hora de fin." )
 
 
 
