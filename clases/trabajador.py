@@ -33,7 +33,11 @@ class Trabajador:
         return False
 
     def tiene_habilidades(self, habilidades_requeridas: list):
-        pass
+        for habilidad in habilidades_requeridas:
+            if habilidad not in self.habilidades:
+                return False
+
+        return True
 
     def credenciales_activas(self, credenciales_requeridas: list, fecha: date):
             
