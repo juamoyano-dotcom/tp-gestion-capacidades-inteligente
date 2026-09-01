@@ -24,3 +24,6 @@ class Labor:
             trab.tiene_habilidades(self.habilidades_requeridas)
             and trab.credenciales_activas(self.credenciales_requeridas, fecha)
         )
+
+    def __repr__(self):
+        return f"Labor({self.id_labor}, {self.titulo})"

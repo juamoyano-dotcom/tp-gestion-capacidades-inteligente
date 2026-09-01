@@ -13,4 +13,6 @@ class Credencial:
 
     def esta_activa(self, fecha_consulta: date):
         return self.fecha_obtencion <= fecha_consulta <= self.fecha_expiracion
-    
+
+    def __repr__(self):
+        return f"Credencial({self.nombre}, vence={self.fecha_expiracion})"

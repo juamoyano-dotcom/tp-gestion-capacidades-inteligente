@@ -17,3 +17,6 @@ class SectorTrabajo:
     def trabajador_cumple_credenciales(self, trab: Trabajador, fecha: date):
 
         return trab.credenciales_activas(self.credenciales_obligatorias, fecha) #verifica directo con el metodo de trabajador --> encapsulamiento
+
+    def __repr__(self):
+        return f"SectorTrabajo({self.nombre})"

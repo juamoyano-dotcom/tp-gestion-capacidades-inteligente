@@ -31,4 +31,12 @@ class FranjaHoraria:
             raise ValueError( "La hora de inicio debe ser distinta a la hora de fin." )
 
 
+    def __eq__(self, other):
+        return isinstance(other, FranjaHoraria) and self.tipo == other.tipo
+ 
+    def __hash__(self):
+        return hash(self.tipo)
+ 
+    def __repr__(self):
+        return f"FranjaHoraria({self.descripcion})"
 

@@ -14,3 +14,6 @@ class Supervisor(Trabajador):
 
         asignacion.aprobar()
         return asignacion
+
+    def __repr__(self):
+        return f"Supervisor({self.id_trabajador}, {self.nombre} {self.apellido})"

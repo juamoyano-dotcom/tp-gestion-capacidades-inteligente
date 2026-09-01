@@ -60,3 +60,6 @@ class Trabajador:
 
         return False
 
+    
+    def __repr__(self):
+        return f"Trabajador({self.id_trabajador}, {self.nombre} {self.apellido})"
