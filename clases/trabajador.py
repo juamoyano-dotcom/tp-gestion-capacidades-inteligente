@@ -32,6 +32,9 @@ class Trabajador:
                     return True
         return False
 
+    def tiene_habilidades(self, habilidades_requeridas: list):
+        pass
+
     def credenciales_activas(self, credenciales_requeridas: list, fecha: date):
             
         for nombre in credenciales_requeridas:
