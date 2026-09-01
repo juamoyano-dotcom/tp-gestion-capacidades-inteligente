@@ -1,11 +1,14 @@
 from datetime import date
 from .asignacion import Asignacion
-
+from .trabajador import Trabajador
+from .labor import Labor
+from .sectortrabajo import SectorTrabajo
+from .franjahoraria import FranjaHoraria
 
 class SistemaGestion:
     def __init__(self):
         self.trabajadores = []
-        self.labores = []
+        self.labores = [] # tiene que tener historial o se va borrando?
         self.areas = []
         self.asignaciones = []
         self.capacidades_franja = []  # Instancias de CapacidadFranjaArea
@@ -23,55 +26,75 @@ class SistemaGestion:
         self.capacidades_franja.append(capacidad_franja)
 
     def proponer_asignacion(self, trabajador, labor, franja, fecha):
-        # Todo lo siguiente que esta comentado es simplemente una idea en la que estuvimos trabajando pero que no logramos definir.
-        # Queda comentado para no borrarlo.
-        # La idea de este metodo es que agregue a la lista de 'asignaciones pendientes' a un trabajador, comprobando que sea posible, para que luego el supervisor
-        # decida si asignarlo o no.
+        # Validación básica de existencia
+        if trabajador is None:
+            raise ValueError("Debe indicarse un trabajador.")
+        if labor is None:
+            raise ValueError("Debe indicarse una labor.")
+        if franja is None:
+            raise ValueError("Debe indicarse una franja horaria.")
 
-        # Regla 7: Exclusividad de la labor para esa fecha y franja
-        # for asig in self.asignaciones:
-        #      if asig.labor.id == labor.id and asig.fecha == fecha and asig.franja_horaria.id == franja.id:
-        #         raise ValueError("La labor ya tiene una asignación comprometida para esta fecha y franja horaria.")
+        # Regla 7: exclusividad de asignación
+        for asig in self.asignaciones:
+            if (
+                asig.labor.id_labor == labor.id_labor
+                and asig.fecha == fecha
+                and asig.franja == franja
+            ):
+                raise ValueError(
+                    "La labor ya tiene una asignación comprometida para esta fecha y franja horaria."
+                )
 
-        # # Regla 4: Aptitud del trabajador para la labor
-        # if not labor.trabajador_es_apto(trabajador, fecha):
-        #     raise ValueError("El trabajador no cumple con las habilidades y credenciales activas requeridas por la labor.")
+        # Regla 4: aptitud del trabajador para la labor
+        if not labor.trabajador_es_apto(trabajador, fecha):
+            raise ValueError(
+                "El trabajador no cumple con las habilidades y credenciales activas requeridas por la labor."
+            )
 
-        # # Regla 10: Credenciales obligatorias del área de trabajo
-        # if not labor.area.trabajador_cumple_credenciales(trabajador, fecha):
-        #     raise ValueError("El trabajador no posee las credenciales obligatorias activas para esta área de trabajo.")
+        # Regla 10: credenciales obligatorias del área
+        if not labor.sector.trabajador_cumple_credenciales(trabajador, fecha):
+            raise ValueError(
+                "El trabajador no posee las credenciales obligatorias activas para esta área de trabajo."
+            )
 
-        # # Regla 5: Respeto por la carga horaria máxima semanal
-        # if trabajador.excede_horas(labor.duracion_horas):
-        #     raise ValueError("La asignación excede el límite máximo de horas semanales del trabajador.")
+        # Regla 5: carga horaria semanal máxima
+        if trabajador.excede_horas(labor.duracion_horas):
+            raise ValueError(
+                "La asignación excede el límite máximo de horas semanales del trabajador."
+            )
 
-        # # Regla 6: Límite de personal por franja horaria y área
-        # asignaciones_franja_area = [
-        #     a for a in self.asignaciones
-        #     if a.fecha == fecha 
-        #     and a.labor.area.id == labor.area.id 
-        #     and a.franja_horaria.id == franja.id
-        # ]
-        # capacidad = self._obtener_capacidad_franja(labor.area, franja)
-        # if capacidad is not None and not capacidad.tiene_capacidad(asignaciones_franja_area):
-        #     raise ValueError("La franja horaria en el área de trabajo seleccionada está completa.")
+        # Regla 6: capacidad por franja horaria y área
+        ocupacion_actual = 0
+        for asig in self.asignaciones:
+            if (
+                asig.fecha == fecha
+                and asig.labor.sector.id == labor.sector.id
+                and asig.franja == franja
+            ):
+                ocupacion_actual += 1
 
-        # # Crear asignación en estado inicial 'Pendiente'
-        # id_asignacion = f"ASIG-{len(self.asignaciones) + 1:04d}"
-        # nueva_asignacion = Asignacion(
-        #     id_asig=id_asignacion,
-        #     trabajador=trabajador,
-        #     labor=labor,
-        #     fecha=fecha,
-        #     estado="Pendiente",
-        #     franja_horaria=franja
-        # )
+        capacidad = None
+        for cap in self.capacidades_franja:
+            if cap.area.id == labor.sector.id and cap.franja == franja:
+                capacidad = cap
+                break
 
-        # # Regla 9: Sumar horas asignadas al trabajador
-        # trabajador.agregar_horas(labor.duracion_horas)
-        # self.asignaciones.append(nueva_asignacion)
-        # return nueva_asignacion
-        pass
+        if capacidad is not None and not capacidad.tiene_capacidad(ocupacion_actual):
+            raise ValueError("La franja horaria en el área de trabajo seleccionada está completa.")
+
+        # Regla 9: suma horas propuestas
+        # Crear la asignación pendiente
+        nueva_asignacion = Asignacion(
+            id_asignacion=len(self.asignaciones) + 1,
+            trabajador=trabajador,
+            labor=labor,
+            franja=franja,
+            fecha=fecha
+        )
+
+        trabajador.agregar_horas(labor.duracion_horas)
+        self.asignaciones.append(nueva_asignacion)
+        return nueva_asignacion
 
     def buscar_disponibles(self, labor, franja, fecha):
         # #  Identifica que trabajadores cumplen con todos los requisitos para ser asignados.
