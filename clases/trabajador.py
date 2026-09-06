@@ -16,6 +16,7 @@ class Trabajador:
         self.horas_trabajadas = 0.0
         self.habilidades = []       #tambien se entiende como 'competencias' --> es una lista str
         self.credenciales = []      #lista de objetos de la clase Credencial
+        #agregar lista de objetos asignacion
 
     def agregar_credencial(self, credencial: Credencial): #relacion composicion --> cuando se crea la 
         self.credenciales.append(credencial)
