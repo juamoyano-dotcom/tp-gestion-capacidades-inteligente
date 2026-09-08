@@ -16,7 +16,7 @@ class Trabajador:
         self.horas_trabajadas = 0.0
         self.habilidades = []       #tambien se entiende como 'competencias' --> es una lista str
         self.credenciales = []      #lista de objetos de la clase Credencial
-        #agregar lista de objetos asignacion
+        self.asignaciones = []      #lista de objetos de la clase Asignacion
 
     def agregar_credencial(self, credencial: Credencial): #relacion composicion --> cuando se crea la 
         self.credenciales.append(credencial)
@@ -24,6 +24,15 @@ class Trabajador:
     def agregar_habilidades(self, habilidad: str): #por ahora lo consideramos una lista de aptitudes, ingresadas por el trabajador (ej.linkedin - aptitudes)
         if habilidad not in self.habilidades:
             self.habilidades.append(habilidad)
+
+    def agregar_asignacion(self, asignacion): #asignacion es un objeto de la clase Asignacion
+        if asignacion not in self.asignaciones:
+            self.asignaciones.append(asignacion)
+
+    def setter_max_horas_semanales(self, max_horas_semanales: float):
+        if max_horas_semanales <= 0:
+            raise ValueError("El máximo de horas semanales debe ser mayor a cero.")
+        self.max_horas_semanales = max_horas_semanales
 
     def tiene_credencial_activa(self, nombre_credencial: str, fecha: date):
     
