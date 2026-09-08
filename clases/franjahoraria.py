@@ -32,11 +32,11 @@ class FranjaHoraria:
 
 
     def __eq__(self, other):
-        return isinstance(other, FranjaHoraria) and self.tipo == other.tipo
+        return isinstance(other, FranjaHoraria) and self.franja == other.franja
  
     def __hash__(self):
-        return hash(self.tipo)
+        return hash(self.franja)
  
     def __repr__(self):
-        return f"FranjaHoraria({self.descripcion})"
+        return f"FranjaHoraria({self.franja.descripcion})"
 
