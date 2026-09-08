@@ -18,4 +18,4 @@ class Asignacion:
 
     def __repr__(self):
         return (f"Asignacion({self.id_asignacion}, {self.trabajador.nombre} -> "
-                f"{self.labor.titulo}, {self.fecha}, {self.franja}, {self.estado})")
+                f"{self.labor.titulo}, {self.fecha}, {self.franja.franja.descripcion}, {self.estado})")

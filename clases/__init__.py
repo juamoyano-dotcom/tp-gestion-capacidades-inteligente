@@ -1,9 +1,10 @@
-from .franjahoraria import FranjaHoraria
-from .trabajador import Trabajador
-from .asignacion import Asignacion
-from .capacidadfranja import CapacidadFranjaArea
 from .credencial import Credencial
-from .labor import Labor
-from .sectortrabajo import SectorTrabajo
-from .sistemagestion import SistemaGestion
+from .trabajador import Trabajador
 from .supervisor import Supervisor
+from .franjahoraria import FranjaHoraria, Franja
+from .sectortrabajo import SectorTrabajo
+from .labor import Labor
+from .capacidadfranja import CapacidadFranjaArea
+from .asignacion import Asignacion
+from .sistemagestion import SistemaGestion
+
