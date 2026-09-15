@@ -15,7 +15,7 @@ class Trabajador:
         self.apellido = apellido
         self.fecha_nacimiento = fecha_nacimiento
         self.max_horas_semanales = max_horas_semanales
-        self.horas_trabajadas = 0.0
+        self.horas_de_trabajo = 0.0
         self.habilidades = []       #tambien se entiende como 'competencias' --> es una lista str
         self.credenciales = []      #lista de objetos de la clase Credencial
         self.asignaciones = []
@@ -63,14 +63,14 @@ class Trabajador:
         return True
     
     def agregar_horas(self, horas:float): #idea: el main una vez que se llama al metodo aprobar de la clase asignacion, y si es true consecuentemente se llama a este metodo para agregar hs
-        self.horas_trabajadas +=horas   
+        self.horas_de_trabajo +=horas   
 
     def resetear_horas_semanales(self):
-        self.horas_trabajadas = 0.0 
+        self.horas_de_trabajo = 0.0 
 
     def excede_horas(self, horas:float): #horas proviene de asignacion (atributo del objeto)
 
-        total_horas = self.horas_trabajadas + horas
+        total_horas = self.horas_de_trabajo + horas
         if total_horas > self.max_horas_semanales:
             return True
 

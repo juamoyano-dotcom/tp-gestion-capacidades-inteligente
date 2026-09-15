@@ -209,7 +209,6 @@ class SistemaGestion:
             fecha=fecha
         )
 
-        trabajador.agregar_horas(labor.duracion_horas)
         self.asignaciones.append(nueva_asignacion)
 
         return nueva_asignacion
