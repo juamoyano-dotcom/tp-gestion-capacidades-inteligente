@@ -15,4 +15,4 @@ class Credencial:
         return self.fecha_obtencion <= fecha_consulta <= self.fecha_expiracion #idea en vez de usar fecha_consulta --> date.today()
 
     def __repr__(self):
-        return f"Credencial({self.nombre}, vence={self.fecha_expiracion})"
+        return f"Credencial({self.nombre}, obtenida={self.fecha_obtencion}, vence={self.fecha_expiracion})"      

@@ -21,8 +21,11 @@ class Trabajador:
         self.asignaciones = []
         self.atributos = atributos    #lista de objetos de la clase Asignacion
     
-    def agregar_credencial (self, credencial: Credencial): #relacion composicion --> cuando se crea la 
+    def agregar_credencial(self, credencial: Credencial, dic_credenciales: dict = None):
         self.credenciales.append(credencial)
+
+        # if dic_credenciales is not None: --> Pasar al main
+        #    self.agregar_credencial_dic(dic_credenciales, credencial) --> pasar al main
 
     def obtener_atributo(self, clave, default=None):
         return self.atributos.get(clave, default)
@@ -75,7 +78,15 @@ class Trabajador:
             return True
 
         return False
-
     
     def __repr__(self):
         return f"Trabajador ({self.id_trabajador}, {self.nombre} {self.apellido})"
+
+# PASAR LO SIGUIENTE AL MAIN
+#    def agregar_credencial_dic(self, dic_credenciales: dict, credencial: Credencial = None):
+#
+#        for credencial_actual in self.credenciales:
+#            trabajadores = dic_credenciales.setdefault(credencial_actual.nombre, [])
+#
+#            if self not in trabajadores:
+#                trabajadores.append(self)
