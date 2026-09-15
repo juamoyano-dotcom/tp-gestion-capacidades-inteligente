@@ -18,10 +18,10 @@ class Trabajador:
         self.credenciales = []      #lista de objetos de la clase Credencial
         self.asignaciones = []      #lista de objetos de la clase Asignacion
 
-    def agregar_credencial(self, credencial: Credencial): #relacion composicion --> cuando se crea la 
+    def agregar_credencial (self, credencial: Credencial): #relacion composicion --> cuando se crea la 
         self.credenciales.append(credencial)
 
-    def agregar_habilidades(self, habilidad: str): #por ahora lo consideramos una lista de aptitudes, ingresadas por el trabajador (ej.linkedin - aptitudes)
+    def agregar_habilidades (self, habilidad: str): #por ahora lo consideramos una lista de aptitudes, ingresadas por el trabajador (ej.linkedin - aptitudes)
         if habilidad not in self.habilidades:
             self.habilidades.append(habilidad)
 
@@ -72,4 +72,4 @@ class Trabajador:
 
     
     def __repr__(self):
-        return f"Trabajador({self.id_trabajador}, {self.nombre} {self.apellido})"
+        return f"Trabajador ({self.id_trabajador}, {self.nombre} {self.apellido})"

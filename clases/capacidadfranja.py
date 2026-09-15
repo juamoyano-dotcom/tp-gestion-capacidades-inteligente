@@ -1,7 +1,6 @@
 from .sectortrabajo import SectorTrabajo
 from .franjahoraria import FranjaHoraria
  
- 
 class CapacidadFranjaArea:
     """
     Regla 6: límite de personal para una combinación (área, franja horaria).
@@ -22,3 +21,5 @@ class CapacidadFranjaArea:
  
     def __repr__(self):
         return f"CapacidadFranjaArea({self.area.nombre}/{self.franja}, max={self.limite_personal})"
+
+#a

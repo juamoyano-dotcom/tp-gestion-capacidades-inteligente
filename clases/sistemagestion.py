@@ -5,7 +5,6 @@ from .labor import Labor
 from .sectortrabajo import SectorTrabajo
 from .franjahoraria import FranjaHoraria
 
-
 class SistemaGestion:
     def __init__(self):
         self.trabajadores = []
