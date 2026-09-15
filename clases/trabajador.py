@@ -1,9 +1,11 @@
+from email.policy import default
+
 from .credencial import Credencial 
 from datetime import date
 
 class Trabajador:
 
-    def __init__(self, id_trabajador: int, nombre: str, apellido: str, fecha_nacimiento: date, max_horas_semanales: float):
+    def __init__(self, id_trabajador: int, nombre: str, apellido: str, fecha_nacimiento: date, max_horas_semanales: float, **atributos):
 
         if max_horas_semanales <= 0:
             raise ValueError("El máximo de horas semanales debe ser mayor a cero.")
@@ -16,10 +18,14 @@ class Trabajador:
         self.horas_trabajadas = 0.0
         self.habilidades = []       #tambien se entiende como 'competencias' --> es una lista str
         self.credenciales = []      #lista de objetos de la clase Credencial
-        self.asignaciones = []      #lista de objetos de la clase Asignacion
-
+        self.asignaciones = []
+        self.atributos = atributos    #lista de objetos de la clase Asignacion
+    
     def agregar_credencial (self, credencial: Credencial): #relacion composicion --> cuando se crea la 
         self.credenciales.append(credencial)
+
+    def obtener_atributo(self, clave, default=None):
+        return self.atributos.get(clave, default)
 
     def agregar_habilidades (self, habilidad: str): #por ahora lo consideramos una lista de aptitudes, ingresadas por el trabajador (ej.linkedin - aptitudes)
         if habilidad not in self.habilidades:
