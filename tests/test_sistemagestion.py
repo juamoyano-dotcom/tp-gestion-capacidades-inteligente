@@ -16,7 +16,6 @@ def construir_sector():
         id_sector=1,
         nombre="Mantenimiento",
         credenciales_obligatorias=["Seguridad Eléctrica"],
-        limite_personal=5,
     )
 
 
@@ -94,7 +93,7 @@ def test_proponer_asignacion_valida_cambia_estado_a_pendiente_y_suma_horas():
 
     assert isinstance(asignacion, Asignacion)
     assert asignacion.estado == "Pendiente"
-    assert trabajador.horas_trabajadas == labor.duracion_horas
+    assert trabajador.horas_de_trabajo == labor.duracion_horas
     assert asignacion in sistema.asignaciones
 
 

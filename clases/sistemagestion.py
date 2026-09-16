@@ -11,7 +11,7 @@ class SistemaGestion:
         self.labores = []
         self.areas = []
         self.asignaciones = []
-        self.capacidades_franja = []  # Instancias de CapacidadFranjaArea
+        self.capacidades_franja = {}  # clave: (area.id, Franja) -> CapacidadFranjaArea
         self.semana_actual = None
 
     def registrar_trabajador(self, trabajador):
@@ -33,12 +33,10 @@ class SistemaGestion:
         self.areas.append(area)
 
     def registrar_capacidad_franja(self, capacidad_franja):
-        for capacidad in self.capacidades_franja:
-            if capacidad.area.id == capacidad_franja.area.id and self.misma_franja(
-                capacidad.franja, capacidad_franja.franja
-            ):
-                raise ValueError("Ya existe una capacidad para ese área y franja horaria.")
-        self.capacidades_franja.append(capacidad_franja)
+        clave = (capacidad_franja.area.id, capacidad_franja.franja.franja)
+        if clave in self.capacidades_franja:
+            raise ValueError("Ya existe una capacidad para ese área y franja horaria.")
+        self.capacidades_franja[clave] = capacidad_franja
 
     @staticmethod
     def misma_franja(franja_a, franja_b):
@@ -66,10 +64,7 @@ class SistemaGestion:
             self.semana_actual = lunes_de_la_semana
 
     def obtener_capacidad_franja(self, area, franja):
-        for capacidad in self.capacidades_franja:
-            if capacidad.area.id == area.id and self.misma_franja(capacidad.franja, franja):
-                return capacidad
-        return None
+        return self.capacidades_franja.get((area.id, franja.franja))
 
     def validar_parametros_asignacion(self, trabajador, labor, franja, fecha):
         if trabajador is None or labor is None or franja is None:
@@ -209,6 +204,7 @@ class SistemaGestion:
             fecha=fecha
         )
 
+        trabajador.agregar_horas(labor.duracion_horas)
         self.asignaciones.append(nueva_asignacion)
 
         return nueva_asignacion
