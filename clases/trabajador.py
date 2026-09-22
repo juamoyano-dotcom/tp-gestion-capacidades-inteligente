@@ -21,11 +21,8 @@ class Trabajador:
         self.asignaciones = []
         self.atributos = atributos    #lista de objetos de la clase Asignacion
     
-    def agregar_credencial(self, credencial: Credencial, dic_credenciales: dict = None):
+    def agregar_credencial(self, credencial: Credencial):
         self.credenciales.append(credencial)
-
-        # if dic_credenciales is not None: --> Pasar al main
-        #    self.agregar_credencial_dic(dic_credenciales, credencial) --> pasar al main
 
     def obtener_atributo(self, clave, default=None):
         return self.atributos.get(clave, default)
@@ -55,11 +52,9 @@ class Trabajador:
         for habilidad in habilidades_requeridas:
             if habilidad not in self.habilidades:
                 return False
-
         return True
 
     def credenciales_activas(self, credenciales_requeridas: list, fecha: date):
-            
         for nombre in credenciales_requeridas:
             if not self.tiene_credencial_activa(nombre, fecha):
                 return False
@@ -72,21 +67,11 @@ class Trabajador:
         self.horas_de_trabajo = 0.0 
 
     def excede_horas(self, horas:float): #horas proviene de asignacion (atributo del objeto)
-
         total_horas = self.horas_de_trabajo + horas
         if total_horas > self.max_horas_semanales:
             return True
-
         return False
     
     def __repr__(self):
         return f"Trabajador ({self.id_trabajador}, {self.nombre} {self.apellido})"
 
-# PASAR LO SIGUIENTE AL MAIN
-#    def agregar_credencial_dic(self, dic_credenciales: dict, credencial: Credencial = None):
-#
-#        for credencial_actual in self.credenciales:
-#            trabajadores = dic_credenciales.setdefault(credencial_actual.nombre, [])
-#
-#            if self not in trabajadores:
-#                trabajadores.append(self)
