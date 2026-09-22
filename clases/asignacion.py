@@ -15,6 +15,7 @@ class Asignacion:
 
     def aprobar(self):
         self.estado = "Aprobada"
+        self.trabajador.agregar_asignacion(self)
 
     def __repr__(self):
         return (f"Asignacion({self.id_asignacion}, {self.trabajador.nombre} -> "

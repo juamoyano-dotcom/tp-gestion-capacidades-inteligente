@@ -1,5 +1,4 @@
-from email.policy import default
-
+from .asignacion import Asignacion
 from .credencial import Credencial 
 from datetime import date
 
@@ -21,7 +20,7 @@ class Trabajador:
         self.asignaciones = []
         self.atributos = atributos    #lista de objetos de la clase Asignacion
     
-    def agregar_credencial(self, credencial: Credencial):
+    def agregar_credencial(self, credencial: Credencial, dic_credenciales: dict = None):
         self.credenciales.append(credencial)
 
     def obtener_atributo(self, clave, default=None):
@@ -31,7 +30,7 @@ class Trabajador:
         if habilidad not in self.habilidades:
             self.habilidades.append(habilidad)
 
-    def agregar_asignacion(self, asignacion): #asignacion es un objeto de la clase Asignacion
+    def agregar_asignacion(self, asignacion: Asignacion): #asignacion es un objeto de la clase Asignacion
         if asignacion not in self.asignaciones:
             self.asignaciones.append(asignacion)
 
@@ -52,9 +51,11 @@ class Trabajador:
         for habilidad in habilidades_requeridas:
             if habilidad not in self.habilidades:
                 return False
+
         return True
 
     def credenciales_activas(self, credenciales_requeridas: list, fecha: date):
+            
         for nombre in credenciales_requeridas:
             if not self.tiene_credencial_activa(nombre, fecha):
                 return False
@@ -67,11 +68,12 @@ class Trabajador:
         self.horas_de_trabajo = 0.0 
 
     def excede_horas(self, horas:float): #horas proviene de asignacion (atributo del objeto)
+
         total_horas = self.horas_de_trabajo + horas
         if total_horas > self.max_horas_semanales:
             return True
+
         return False
     
     def __repr__(self):
         return f"Trabajador ({self.id_trabajador}, {self.nombre} {self.apellido})"
-
