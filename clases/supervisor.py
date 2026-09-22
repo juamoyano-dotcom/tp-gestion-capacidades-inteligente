@@ -1,12 +1,12 @@
 from .trabajador import Trabajador
-from .asignacion import Asignacion
+from .asignacion import Asignacion, EstadoAsignacion
 
 
 class Supervisor(Trabajador):
 
     def formalizar_asignacion(self, asignacion: Asignacion):
     
-        if asignacion.estado != "Pendiente":
+        if asignacion.estado is not EstadoAsignacion.PENDIENTE:
             raise ValueError(f"No se puede formalizar una asignación en estado '{asignacion.estado}' (sólo se formalizan asignaciones 'Pendiente').")
 
         asignacion.aprobar()

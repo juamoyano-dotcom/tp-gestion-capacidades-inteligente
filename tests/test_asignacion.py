@@ -1,7 +1,7 @@
 import pytest
 from datetime import date, time
 
-from clases.asignacion import Asignacion
+from clases.asignacion import Asignacion, EstadoAsignacion
 from clases.trabajador import Trabajador
 from clases.labor import Labor
 from clases.sectortrabajo import SectorTrabajo
@@ -71,7 +71,7 @@ def test_creacion_asignacion_valida():
     assert asignacion.labor.titulo == "Limpieza de líneas"
     assert asignacion.franja.franja == Franja.MAÑANA
     assert asignacion.fecha == date(2025, 1, 1)
-    assert asignacion.estado == "Pendiente"
+    assert asignacion.estado is EstadoAsignacion.PENDIENTE
     assert asignacion.horas_asignadas == 3
 
 
@@ -80,7 +80,7 @@ def test_aprobar_asignacion_cambia_estado_a_aprobada():
 
     asignacion.aprobar()
 
-    assert asignacion.estado == "Aprobada"
+    assert asignacion.estado is EstadoAsignacion.APROBADA
 
 
 def test_formalizar_asignacion_solo_puede_hacerse_si_esta_pendiente():
