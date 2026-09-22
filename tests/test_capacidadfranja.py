@@ -11,7 +11,6 @@ def construir_sector():
         id_sector=1,
         nombre="Mantenimiento",
         credenciales_obligatorias=[],
-        limite_personal=5,
     )
 
 

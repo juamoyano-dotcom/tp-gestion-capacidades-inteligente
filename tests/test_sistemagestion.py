@@ -74,7 +74,7 @@ def test_creacion_sistema_valida():
     assert sistema.labores == []
     assert sistema.areas == []
     assert sistema.asignaciones == []
-    assert sistema.capacidades_franja == []
+    assert sistema.capacidades_franja == {}
 
 
 def test_registrar_trabajador_y_area_y_labor_y_capacidad():
@@ -83,7 +83,7 @@ def test_registrar_trabajador_y_area_y_labor_y_capacidad():
     assert trabajador in sistema.trabajadores
     assert labor in sistema.labores
     assert labor.sector in sistema.areas
-    assert any(cap.area == labor.sector and cap.franja == franja for cap in sistema.capacidades_franja)
+    assert sistema.obtener_capacidad_franja(labor.sector, franja) is not None
 
 
 def test_proponer_asignacion_valida_cambia_estado_a_pendiente_y_suma_horas():

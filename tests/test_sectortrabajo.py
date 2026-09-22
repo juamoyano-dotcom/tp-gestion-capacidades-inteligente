@@ -11,7 +11,6 @@ def construir_sector():
         id_sector=1,
         nombre="Mantenimiento",
         credenciales_obligatorias=["Seguridad Eléctrica"],
-        limite_personal=5,
     )
 
 
@@ -31,17 +30,6 @@ def test_creacion_sector_valida():
     assert sector.id == 1
     assert sector.nombre == "Mantenimiento"
     assert sector.credenciales_obligatorias == ["Seguridad Eléctrica"]
-    assert sector.limite_personal == 5
-
-
-def test_creacion_sector_con_limite_personal_negativo_lanza_valueerror():
-    with pytest.raises(ValueError, match="no puede ser negativo"):
-        SectorTrabajo(
-            id_sector=2,
-            nombre="Electricidad",
-            credenciales_obligatorias=["Seguridad Eléctrica"],
-            limite_personal=-1,
-        )
 
 
 def test_trabajador_cumple_credenciales_true_si_todas_activas():
@@ -65,7 +53,6 @@ def test_trabajador_cumple_credenciales_false_si_sector_no_tiene_credenciales_ob
         id_sector=3,
         nombre="Limpieza",
         credenciales_obligatorias=[],
-        limite_personal=2,
     )
     trabajador = construir_trabajador()
 

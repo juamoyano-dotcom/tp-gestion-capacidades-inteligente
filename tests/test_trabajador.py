@@ -22,7 +22,7 @@ def test_creacion_trabajador_valida():
     assert trabajador.apellido == "García"
     assert trabajador.fecha_nacimiento == date(1990, 1, 1)
     assert trabajador.max_horas_semanales == 40
-    assert trabajador.horas_trabajadas == 0.0
+    assert trabajador.horas_de_trabajo == 0.0
     assert trabajador.habilidades == []
     assert trabajador.credenciales == []
 
@@ -108,7 +108,7 @@ def test_agregar_horas_suma_carga_semanal():
     trabajador.agregar_horas(10)
     trabajador.agregar_horas(5)
 
-    assert trabajador.horas_trabajadas == 15
+    assert trabajador.horas_de_trabajo == 15
 
 
 def test_resetear_horas_semanales_cambia_carga_a_cero():
@@ -117,7 +117,7 @@ def test_resetear_horas_semanales_cambia_carga_a_cero():
 
     trabajador.resetear_horas_semanales()
 
-    assert trabajador.horas_trabajadas == 0.0
+    assert trabajador.horas_de_trabajo == 0.0
 
 
 def test_excede_horas_retorna_true_si_sobrepasa_maximo():
