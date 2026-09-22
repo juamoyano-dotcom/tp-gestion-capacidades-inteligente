@@ -20,11 +20,16 @@ class Trabajador:
         self.asignaciones = []
         self.atributos = atributos    #lista de objetos de la clase Asignacion
     
-    def agregar_credencial(self, credencial: Credencial, dic_credenciales: dict = None):
+    def agregar_credencial(self, credencial: Credencial):
         self.credenciales.append(credencial)
 
     def obtener_atributo(self, clave, default=None):
         return self.atributos.get(clave, default)
+
+    def agregar_atributo(self, clave, valor, sobrescribir=True):
+        if not sobrescribir and clave in self.atributos:
+            raise ValueError(f"El atributo '{clave}' ya existe.")
+        self.atributos[clave] = valor
 
     def agregar_habilidades (self, habilidad: str): #por ahora lo consideramos una lista de aptitudes, ingresadas por el trabajador (ej.linkedin - aptitudes)
         if habilidad not in self.habilidades:
