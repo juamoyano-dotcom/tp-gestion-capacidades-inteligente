@@ -223,3 +223,13 @@ class SistemaGestion:
                 disponibles.append(trab)
 
         return disponibles
+
+def horas_comprometidas(self, trabajador, fecha) -> float:
+        lunes = fecha - timedelta(days=fecha.weekday())
+        domingo = lunes + timedelta(days=6)
+        return sum(
+        a.horas_asignadas
+        for a in self.asignaciones
+        if a.trabajador.id_trabajador == trabajador.id_trabajador
+        and lunes <= a.fecha <= domingo
+        )
