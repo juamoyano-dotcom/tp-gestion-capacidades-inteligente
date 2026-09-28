@@ -9,7 +9,7 @@ class Supervisor(Trabajador):
         if asignacion.estado != "Pendiente":
             raise ValueError(f"No se puede formalizar una asignación en estado '{asignacion.estado}' (sólo se formalizan asignaciones 'Pendiente').")
 
-        asignacion.aprobar()
+        asignacion.aprobar(self) #se pone el self porque aprobar requiere saber si el que llama al metodo es un supervisor
         return asignacion
 
     def __repr__(self):

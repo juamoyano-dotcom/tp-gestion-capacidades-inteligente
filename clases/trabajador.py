@@ -1,4 +1,3 @@
-from .asignacion import Asignacion
 from .credencial import Credencial 
 from datetime import date
 
@@ -18,24 +17,35 @@ class Trabajador:
         self.habilidades = []       #tambien se entiende como 'competencias' --> es una lista str
         self.credenciales = []      #lista de objetos de la clase Credencial
         self.asignaciones = []
-        self.atributos = atributos    #lista de objetos de la clase Asignacion
-    
+
+        self._atributos = {} #_atributos representa un atributo interno de la clase (no encapsulamiento fuerte)
+        #intención: el acceso y modificación de los atributos adicionales se haga mediante obtener_atributo() y agregar_atributo()
+        for clave, valor in atributos.items():
+            self.agregar_atributo(clave, valor)
+        
     def agregar_credencial(self, credencial: Credencial):
         self.credenciales.append(credencial)
 
-    def obtener_atributo(self, clave, default=None):
-        return self.atributos.get(clave, default)
+    def obtener_atributo(self, clave, default=None) -> object:
+        return self._atributos.get(clave, default)
 
     def agregar_atributo(self, clave, valor, sobrescribir=True):
-        if not sobrescribir and clave in self.atributos:
+        if hasattr(self, clave):
+            raise ValueError(
+                f"'{clave}' ya es un atributo o método de Trabajador, "
+                "no un atributo adicional."
+            )
+
+        if not sobrescribir and clave in self._atributos:
             raise ValueError(f"El atributo '{clave}' ya existe.")
-        self.atributos[clave] = valor
+
+        self._atributos[clave] = valor
 
     def agregar_habilidades (self, habilidad: str): #por ahora lo consideramos una lista de aptitudes, ingresadas por el trabajador (ej.linkedin - aptitudes)
         if habilidad not in self.habilidades:
             self.habilidades.append(habilidad)
 
-    def agregar_asignacion(self, asignacion: Asignacion): #asignacion es un objeto de la clase Asignacion
+    def agregar_asignacion(self, asignacion): #asignacion es un objeto de la clase Asignacion --> no pongo el tipo de dato porque sino hay un ciclo infinito de imports
         if asignacion not in self.asignaciones:
             self.asignaciones.append(asignacion)
 
@@ -52,7 +62,7 @@ class Trabajador:
                     return True
         return False
 
-    def tiene_habilidades(self, habilidades_requeridas: list):
+    def tiene_habilidades(self, habilidades_requeridas: list) -> bool:
         for habilidad in habilidades_requeridas:
             if habilidad not in self.habilidades:
                 return False
@@ -66,13 +76,13 @@ class Trabajador:
                 return False
         return True
     
-    def agregar_horas(self, horas:float): #idea: el main una vez que se llama al metodo aprobar de la clase asignacion, y si es true consecuentemente se llama a este metodo para agregar hs
+    def agregar_horas(self, horas:float) -> None: #idea: el main una vez que se llama al metodo aprobar de la clase asignacion, y si es true consecuentemente se llama a este metodo para agregar hs
         self.horas_de_trabajo +=horas   
 
-    def resetear_horas_semanales(self):
+    def resetear_horas_semanales(self) -> None:
         self.horas_de_trabajo = 0.0 
 
-    def excede_horas(self, horas:float): #horas proviene de asignacion (atributo del objeto)
+    def excede_horas(self, horas:float)-> bool: #horas proviene de asignacion (atributo del objeto)
 
         total_horas = self.horas_de_trabajo + horas
         if total_horas > self.max_horas_semanales:

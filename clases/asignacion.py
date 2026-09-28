@@ -13,7 +13,19 @@ class Asignacion:
         self.estado = "Pendiente"
         self.horas_asignadas = labor.duracion_horas
 
-    def aprobar(self):
+    def aprobar(self,supervisor):
+        from .supervisor import Supervisor 
+        #puse adentro el import para que no se genere un bucle de import entre supervisor y asignacion
+
+        if not isinstance(supervisor, Supervisor):
+            raise ValueError(
+                "Solo un Supervisor puede aprobar una asignación."
+            )
+
+        if self.estado != "Pendiente":
+            raise ValueError(
+                f"No se puede aprobar una asignación en estado '{self.estado}'."
+            )
         self.estado = "Aprobada"
         self.trabajador.agregar_asignacion(self)
 
