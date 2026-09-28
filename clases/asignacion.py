@@ -29,7 +29,7 @@ class Asignacion:
 
         if self.estado != EstadoAsignacion.PENDIENTE:
             raise ValueError(
-                f"No se puede aprobar una asignación en estado '{self.estado}'."
+                f"No se puede aprobar una asignación en estado '{self.estado.value}'."
             )
 
         self.estado = EstadoAsignacion.APROBADA
@@ -37,4 +37,4 @@ class Asignacion:
 
     def __repr__(self):
         return (f"Asignacion({self.id_asignacion}, {self.trabajador.nombre} -> "
-                f"{self.labor.titulo}, {self.fecha}, {self.franja.franja.descripcion}, {self.estado})")
+                f"{self.labor.titulo}, {self.fecha}, {self.franja.franja.descripcion}, {self.estado.value})")

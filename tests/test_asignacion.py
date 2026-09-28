@@ -128,3 +128,18 @@ def test_formalizar_asignacion_solo_puede_hacerse_si_esta_pendiente():
 
     with pytest.raises(ValueError, match="sólo se formalizan asignaciones 'Pendiente'"):
         supervisor.formalizar_asignacion(asignacion)  # ya está Aprobada
+
+def test_aprobar_asignacion_ya_aprobada_muestra_el_estado_legible_en_el_mensaje():
+    asignacion = construir_asignacion()
+    supervisor = construir_supervisor()
+    asignacion.aprobar(supervisor)
+
+    with pytest.raises(ValueError, match="estado 'Aprobada'"):
+        asignacion.aprobar(supervisor)
+
+
+def test_repr_muestra_el_valor_del_estado_y_no_el_nombre_del_enum():
+    asignacion = construir_asignacion()
+
+    assert "Pendiente" in repr(asignacion)
+    assert "EstadoAsignacion" not in repr(asignacion)

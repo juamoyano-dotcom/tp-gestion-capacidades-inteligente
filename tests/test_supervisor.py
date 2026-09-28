@@ -107,3 +107,11 @@ def test_formalizar_asignacion_ya_aprobada_lanza_valueerror():
 
     with pytest.raises(ValueError, match="sólo se formalizan asignaciones 'Pendiente'"):
         supervisor.formalizar_asignacion(asignacion)
+
+def test_formalizar_asignacion_ya_aprobada_muestra_el_estado_legible_en_el_mensaje():
+    supervisor = construir_supervisor()
+    asignacion = construir_asignacion()
+    asignacion.aprobar(supervisor)
+
+    with pytest.raises(ValueError, match="estado 'Aprobada'"):
+        supervisor.formalizar_asignacion(asignacion)
