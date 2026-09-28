@@ -16,5 +16,3 @@ class CapacidadFranjaArea:
  
     def __repr__(self):
         return f"CapacidadFranjaArea({self.area.nombre}/{self.franja}, max={self.limite_personal})"
-
-#a
