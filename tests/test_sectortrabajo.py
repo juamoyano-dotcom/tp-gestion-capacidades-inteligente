@@ -48,7 +48,7 @@ def test_trabajador_cumple_credenciales_false_si_falta_credencial_activa():
     assert sector.trabajador_cumple_credenciales(trabajador, date(2025, 1, 1)) is False
 
 
-def test_trabajador_cumple_credenciales_false_si_sector_no_tiene_credenciales_obligatorias():
+def test_trabajador_cumple_credenciales_true_si_sector_no_tiene_credenciales_obligatorias():
     sector = SectorTrabajo(
         id_sector=3,
         nombre="Limpieza",

@@ -1,8 +1,12 @@
 import pytest
-from datetime import date
+from datetime import date, time
 
 from clases.trabajador import Trabajador
 from clases.credencial import Credencial
+from clases.asignacion import Asignacion
+from clases.labor import Labor
+from clases.sectortrabajo import SectorTrabajo
+from clases.franjahoraria import FranjaHoraria, Franja
 
 def construir_trabajador():
     return Trabajador(
@@ -132,3 +136,83 @@ def test_excede_horas_retorna_false_si_no_sobrepasa_maximo():
     trabajador.agregar_horas(30)
 
     assert trabajador.excede_horas(5) is False
+
+
+def test_creacion_con_atributos_adicionales_los_guarda():
+    trabajador = Trabajador(
+        id_trabajador=3,
+        nombre="Luis",
+        apellido="Pérez",
+        fecha_nacimiento=date(1995, 2, 2),
+        max_horas_semanales=40,
+        idioma="Portugués",
+    )
+
+    assert trabajador.obtener_atributo("idioma") == "Portugués"
+
+
+def test_obtener_atributo_inexistente_devuelve_none_o_el_default():
+    trabajador = construir_trabajador()
+
+    assert trabajador.obtener_atributo("idioma") is None
+    assert trabajador.obtener_atributo("idioma", "Español") == "Español"
+
+
+def test_agregar_atributo_guarda_el_valor():
+    trabajador = construir_trabajador()
+
+    trabajador.agregar_atributo("idioma", "Portugués")
+
+    assert trabajador.obtener_atributo("idioma") == "Portugués"
+
+
+def test_agregar_atributo_sobrescribe_por_defecto():
+    trabajador = construir_trabajador()
+    trabajador.agregar_atributo("idioma", "Portugués")
+
+    trabajador.agregar_atributo("idioma", "Inglés")
+
+    assert trabajador.obtener_atributo("idioma") == "Inglés"
+
+
+def test_agregar_atributo_sin_sobrescribir_lanza_valueerror_si_ya_existe():
+    trabajador = construir_trabajador()
+    trabajador.agregar_atributo("idioma", "Portugués")
+
+    with pytest.raises(ValueError, match="ya existe"):
+        trabajador.agregar_atributo("idioma", "Inglés", sobrescribir=False)
+
+    assert trabajador.obtener_atributo("idioma") == "Portugués"
+
+
+@pytest.mark.parametrize("clave", ["habilidades", "credenciales", "asignaciones", "max_horas_semanales"])
+def test_agregar_atributo_con_clave_reservada_lanza_valueerror(clave):
+    trabajador = construir_trabajador()
+
+    with pytest.raises(ValueError, match="ya es un atributo o método"):
+        trabajador.agregar_atributo(clave, "valor")
+
+
+def test_creacion_con_kwarg_que_pisa_un_atributo_real_lanza_valueerror():
+    with pytest.raises(ValueError, match="ya es un atributo o método"):
+        Trabajador(
+            id_trabajador=4,
+            nombre="Ana",
+            apellido="Gómez",
+            fecha_nacimiento=date(1990, 1, 1),
+            max_horas_semanales=40,
+            habilidades=["Soldadura"],
+        )
+
+
+def test_agregar_asignacion_agrega_y_no_duplica():
+    trabajador = construir_trabajador()
+    sector = SectorTrabajo(id_sector=1, nombre="Mantenimiento", credenciales_obligatorias=[])
+    labor = Labor(1, "Limpieza", "Limpieza de línea.", 3, [], [], sector)
+    franja = FranjaHoraria(Franja.MAÑANA, time(8, 0), time(12, 0))
+    asignacion = Asignacion(1, trabajador, labor, franja, date(2025, 1, 1))
+
+    trabajador.agregar_asignacion(asignacion)
+    trabajador.agregar_asignacion(asignacion)
+
+    assert trabajador.asignaciones == [asignacion]

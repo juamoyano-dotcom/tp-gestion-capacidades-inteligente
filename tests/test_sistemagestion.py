@@ -3,6 +3,7 @@ from datetime import date, time
 
 from clases.sistemagestion import SistemaGestion
 from clases.trabajador import Trabajador
+from clases.supervisor import Supervisor
 from clases.labor import Labor
 from clases.sectortrabajo import SectorTrabajo
 from clases.credencial import Credencial
@@ -137,3 +138,20 @@ def test_buscar_disponibles_filtra_aptos_y_no_excede_horas():
     disponibles = sistema.buscar_disponibles(labor, franja, date(2025, 1, 1))
 
     assert trabajador in disponibles
+
+
+def test_proponer_asignacion_no_la_agrega_al_trabajador_hasta_que_el_supervisor_la_formaliza():
+    sistema, trabajador, labor, franja = construir_sistema_base()
+    supervisor = Supervisor(
+        id_trabajador=99,
+        nombre="José",
+        apellido="López",
+        fecha_nacimiento=date(1991, 1, 1),
+        max_horas_semanales=40,
+    )
+
+    asignacion = sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
+    assert trabajador.asignaciones == []
+
+    supervisor.formalizar_asignacion(asignacion)
+    assert trabajador.asignaciones == [asignacion]

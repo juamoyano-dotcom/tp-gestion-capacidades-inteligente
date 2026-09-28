@@ -91,10 +91,19 @@ def test_formalizar_asignacion_pendiente_cambia_estado_a_aprobada():
     assert asignacion.estado is EstadoAsignacion.APROBADA
 
 
+def test_formalizar_asignacion_agrega_la_asignacion_al_trabajador():
+    supervisor = construir_supervisor()
+    asignacion = construir_asignacion()
+
+    supervisor.formalizar_asignacion(asignacion)
+
+    assert asignacion in asignacion.trabajador.asignaciones
+
+
 def test_formalizar_asignacion_ya_aprobada_lanza_valueerror():
     supervisor = construir_supervisor()
     asignacion = construir_asignacion()
-    asignacion.aprobar()
+    asignacion.aprobar(supervisor)
 
     with pytest.raises(ValueError, match="sólo se formalizan asignaciones 'Pendiente'"):
         supervisor.formalizar_asignacion(asignacion)

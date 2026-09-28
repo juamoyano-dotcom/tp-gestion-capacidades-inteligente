@@ -2,10 +2,21 @@ import pytest
 from datetime import date, time
 
 from clases.asignacion import Asignacion, EstadoAsignacion
+from clases.supervisor import Supervisor
 from clases.trabajador import Trabajador
 from clases.labor import Labor
 from clases.sectortrabajo import SectorTrabajo
 from clases.franjahoraria import FranjaHoraria, Franja
+
+
+def construir_supervisor():
+    return Supervisor(
+        id_trabajador=2,
+        nombre="José",
+        apellido="López",
+        fecha_nacimiento=date(1991, 1, 1),
+        max_horas_semanales=40,
+    )
 
 
 def construir_trabajador():
@@ -75,25 +86,45 @@ def test_creacion_asignacion_valida():
     assert asignacion.horas_asignadas == 3
 
 
-def test_aprobar_asignacion_cambia_estado_a_aprobada():
+def test_aprobar_asignacion_con_supervisor_cambia_estado_a_aprobada():
     asignacion = construir_asignacion()
 
-    asignacion.aprobar()
+    asignacion.aprobar(construir_supervisor())
 
     assert asignacion.estado is EstadoAsignacion.APROBADA
 
 
+def test_aprobar_agrega_la_asignacion_al_trabajador():
+    asignacion = construir_asignacion()
+    assert asignacion not in asignacion.trabajador.asignaciones
+
+    asignacion.aprobar(construir_supervisor())
+
+    assert asignacion in asignacion.trabajador.asignaciones
+
+
+def test_aprobar_sin_supervisor_lanza_valueerror():
+    asignacion = construir_asignacion()
+
+    with pytest.raises(ValueError, match="Solo un Supervisor"):
+        asignacion.aprobar(asignacion.trabajador)  # un Trabajador común no puede aprobar
+
+    assert asignacion.estado is EstadoAsignacion.PENDIENTE
+
+
+def test_aprobar_asignacion_ya_aprobada_lanza_valueerror():
+    asignacion = construir_asignacion()
+    supervisor = construir_supervisor()
+    asignacion.aprobar(supervisor)
+
+    with pytest.raises(ValueError, match="No se puede aprobar"):
+        asignacion.aprobar(supervisor)
+
+
 def test_formalizar_asignacion_solo_puede_hacerse_si_esta_pendiente():
     asignacion = construir_asignacion()
-    asignacion.aprobar()
+    supervisor = construir_supervisor()
+    supervisor.formalizar_asignacion(asignacion)  # primera vez: válida
 
     with pytest.raises(ValueError, match="sólo se formalizan asignaciones 'Pendiente'"):
-        from clases.supervisor import Supervisor
-        supervisor = Supervisor(
-            id_trabajador=2,
-            nombre="José",
-            apellido="López",
-            fecha_nacimiento=date(1991, 1, 1),
-            max_horas_semanales=40,
-        )
-        supervisor.formalizar_asignacion(asignacion)
+        supervisor.formalizar_asignacion(asignacion)  # ya está Aprobada
