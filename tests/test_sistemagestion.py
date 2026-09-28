@@ -6,7 +6,7 @@ from clases.trabajador import Trabajador
 from clases.labor import Labor
 from clases.sectortrabajo import SectorTrabajo
 from clases.credencial import Credencial
-from clases.asignacion import Asignacion
+from clases.asignacion import Asignacion, EstadoAsignacion
 from clases.franjahoraria import FranjaHoraria, Franja
 from clases.capacidadfranja import CapacidadFranjaArea
 
@@ -92,7 +92,7 @@ def test_proponer_asignacion_valida_cambia_estado_a_pendiente_y_suma_horas():
     asignacion = sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
 
     assert isinstance(asignacion, Asignacion)
-    assert asignacion.estado == "Pendiente"
+    assert asignacion.estado is EstadoAsignacion.PENDIENTE
     assert trabajador.horas_de_trabajo == labor.duracion_horas
     assert asignacion in sistema.asignaciones
 

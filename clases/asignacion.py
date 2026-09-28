@@ -1,6 +1,12 @@
 from datetime import date
+from enum import Enum
 from .trabajador import Trabajador
 from .franjahoraria import FranjaHoraria
+
+
+class EstadoAsignacion(Enum):
+    PENDIENTE = "Pendiente"
+    APROBADA = "Aprobada"
 
 
 class Asignacion:
@@ -10,24 +16,24 @@ class Asignacion:
         self.labor = labor
         self.franja = franja
         self.fecha = fecha
-        self.estado = "Pendiente"
+        self.estado = EstadoAsignacion.PENDIENTE
         self.horas_asignadas = labor.duracion_horas
 
-    def aprobar(self,supervisor):
-        from .supervisor import Supervisor 
-        #puse adentro el import para que no se genere un bucle de import entre supervisor y asignacion
 
-        if not isinstance(supervisor, Supervisor):
-            raise ValueError(
-                "Solo un Supervisor puede aprobar una asignación."
-            )
+        def aprobar(self, supervisor):
+            from .supervisor import Supervisor
+            # Import dentro del método para evitar el import circular entre supervisor y asignacion.
 
-        if self.estado != "Pendiente":
-            raise ValueError(
-                f"No se puede aprobar una asignación en estado '{self.estado}'."
-            )
-        self.estado = "Aprobada"
-        self.trabajador.agregar_asignacion(self)
+            if not isinstance(supervisor, Supervisor):
+                raise ValueError("Solo un Supervisor puede aprobar una asignación.")
+
+            if self.estado != EstadoAsignacion.PENDIENTE:
+                raise ValueError(
+                    f"No se puede aprobar una asignación en estado '{self.estado}'."
+                )
+
+            self.estado = EstadoAsignacion.APROBADA
+            self.trabajador.agregar_asignacion(self)
 
     def __repr__(self):
         return (f"Asignacion({self.id_asignacion}, {self.trabajador.nombre} -> "

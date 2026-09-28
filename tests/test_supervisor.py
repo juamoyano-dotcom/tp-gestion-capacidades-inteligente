@@ -2,7 +2,7 @@ import pytest
 from datetime import date, time
 
 from clases.supervisor import Supervisor
-from clases.asignacion import Asignacion
+from clases.asignacion import Asignacion, EstadoAsignacion
 from clases.trabajador import Trabajador
 from clases.labor import Labor
 from clases.sectortrabajo import SectorTrabajo
@@ -88,7 +88,7 @@ def test_formalizar_asignacion_pendiente_cambia_estado_a_aprobada():
     resultado = supervisor.formalizar_asignacion(asignacion)
 
     assert resultado is asignacion
-    assert asignacion.estado == "Aprobada"
+    assert asignacion.estado is EstadoAsignacion.APROBADA
 
 
 def test_formalizar_asignacion_ya_aprobada_lanza_valueerror():
