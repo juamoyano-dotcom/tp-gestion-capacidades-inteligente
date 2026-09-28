@@ -12,7 +12,7 @@ class SistemaGestion:
         self.areas = []
         self.asignaciones = []
         self.capacidades_franja = {}  
-        self.semana_actual = None
+
 
     def registrar_trabajador(self, trabajador):
         for t in self.trabajadores:
@@ -46,20 +46,6 @@ class SistemaGestion:
             and franja_a.franja == franja_b.franja
         )
 
-    def preparar_semana(self, fecha):
-        lunes_de_la_semana = fecha - timedelta(days=fecha.weekday())
-
-        if self.semana_actual is None:
-            for trabajador in self.trabajadores:
-                trabajador.resetear_horas_semanales()
-
-            self.semana_actual = lunes_de_la_semana
-
-        elif lunes_de_la_semana > self.semana_actual:
-            for trabajador in self.trabajadores:
-                trabajador.resetear_horas_semanales()
-
-            self.semana_actual = lunes_de_la_semana
 
     def obtener_capacidad_franja(self, area, franja):
         return self.capacidades_franja.get((area.id, franja.franja))
@@ -114,8 +100,7 @@ class SistemaGestion:
 
         if not labor.sector.trabajador_cumple_credenciales(trabajador, fecha):
             return "El trabajador no posee las credenciales obligatorias activas para esta área de trabajo."
-
-        if trabajador.excede_horas(labor.duracion_horas):
+        if self.horas_comprometidas(trabajador, fecha) + labor.duracion_horas > trabajador.max_horas_semanales:
             return "La asignación excede el límite máximo de horas semanales del trabajador."
 
         return None
@@ -150,7 +135,6 @@ class SistemaGestion:
 
     def proponer_asignacion(self, trabajador, labor, franja, fecha):
         self.validar_parametros_asignacion(trabajador, labor, franja, fecha)
-        self.preparar_semana(fecha)
 
         capacidad = self.obtener_capacidad_franja(labor.sector, franja)
         if capacidad is None:
@@ -177,13 +161,12 @@ class SistemaGestion:
             labor=labor,
             franja=franja,
             fecha=fecha
+
         )
 
-        trabajador.agregar_horas(labor.duracion_horas)
-        self.asignaciones.append(nueva_asignacion)
-
+        self.asignaciones.append(nueva_asignacion) 
         return nueva_asignacion
-
+    
     def buscar_disponibles(self, labor, franja, fecha):
         if labor is None or franja is None:
             raise ValueError("La labor y la franja son obligatorias.")
@@ -200,8 +183,6 @@ class SistemaGestion:
             
         if not labor_registrada:
             raise ValueError("La labor no está registrada en el sistema.")
-
-        self.preparar_semana(fecha)
 
         if self.labor_ya_asignada(labor, franja, fecha):
             return []
@@ -224,12 +205,20 @@ class SistemaGestion:
 
         return disponibles
 
-def horas_comprometidas(self, trabajador, fecha) -> float:
+    def horas_comprometidas(self, trabajador, fecha) :
+        """
+        Horas ya asignadas al trabajador en la semana (lunes a domingo) de `fecha`.
+
+        Decisión de diseño: no se guarda un contador. Se calcula desde
+        self.asignaciones, que es la única fuente de verdad. Así la regla 12
+        se cumple sola (una semana sin asignaciones suma 0), las consultas no
+        modifican el estado y no hay desincronización posible.
+        """
+
         lunes = fecha - timedelta(days=fecha.weekday())
         domingo = lunes + timedelta(days=6)
-        return sum(
-        a.horas_asignadas
+        return sum(a.horas_asignadas
         for a in self.asignaciones
-        if a.trabajador.id_trabajador == trabajador.id_trabajador
-        and lunes <= a.fecha <= domingo
+            if a.trabajador.id_trabajador == trabajador.id_trabajador
+            and lunes <= a.fecha <= domingo
         )
