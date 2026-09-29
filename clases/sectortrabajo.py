@@ -5,8 +5,7 @@ from .trabajador import Trabajador
 
 class SectorTrabajo:
 
-    def __init__(self, id_sector: int, nombre: str,
-                 credenciales_obligatorias: List[str] = None):
+    def __init__(self, id_sector: int, nombre: str, credenciales_obligatorias: List[str] = None):
         self.id = id_sector
         self.nombre = nombre
         self.credenciales_obligatorias = credenciales_obligatorias if credenciales_obligatorias is not None else []
