@@ -210,9 +210,8 @@ class SistemaGestion:
         Horas ya asignadas al trabajador en la semana (lunes a domingo) de `fecha`.
 
         Decisión de diseño: no se guarda un contador. Se calcula desde
-        self.asignaciones, que es la única fuente de verdad. Así la regla 12
-        se cumple sola (una semana sin asignaciones suma 0), las consultas no
-        modifican el estado y no hay desincronización posible.
+        self.asignaciones, que es la única fuente de verdad. Así, las consultas no
+        modifican el estado y no hay desincronización.
         """
 
         lunes = fecha - timedelta(days=fecha.weekday())
