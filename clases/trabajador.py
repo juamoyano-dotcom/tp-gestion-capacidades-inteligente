@@ -20,12 +20,12 @@ class Trabajador:
         self._atributos = {} #_atributos representa un atributo interno de la clase (no encapsulamiento fuerte)
         #intención: el acceso y modificación de los atributos adicionales se haga mediante obtener_atributo() y agregar_atributo()
         for clave, valor in atributos.items():
-            self.agregar_atributo(clave, valor)
+            self.agregar_atributo(clave, valor)  
         
     def agregar_credencial(self, credencial: Credencial):
         self.credenciales.append(credencial)
 
-    def obtener_atributo(self, clave, default=None) -> object:
+    def obtener_atributo(self, clave, default=None) :
         return self._atributos.get(clave, default)
 
     def agregar_atributo(self, clave, valor, sobrescribir=True):
