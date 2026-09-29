@@ -94,7 +94,7 @@ def test_proponer_asignacion_valida_cambia_estado_a_pendiente_y_suma_horas():
 
     assert isinstance(asignacion, Asignacion)
     assert asignacion.estado is EstadoAsignacion.PENDIENTE
-    assert trabajador.horas_de_trabajo == labor.duracion_horas
+    assert sistema.horas_comprometidas(trabajador, date(2025, 1, 1)) == labor.duracion_horas
     assert asignacion in sistema.asignaciones
 
 
@@ -155,3 +155,44 @@ def test_proponer_asignacion_no_la_agrega_al_trabajador_hasta_que_el_supervisor_
 
     supervisor.formalizar_asignacion(asignacion)
     assert trabajador.asignaciones == [asignacion]
+
+def test_horas_comprometidas_es_cero_para_trabajador_sin_asignaciones():
+    sistema, trabajador, labor, franja = construir_sistema_base()
+
+    assert sistema.horas_comprometidas(trabajador, date(2025, 1, 1)) == 0
+
+
+def test_horas_comprometidas_suma_asignaciones_de_la_misma_semana():
+    sistema, trabajador, labor, franja = construir_sistema_base()
+
+    sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
+    sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 2))
+
+    assert sistema.horas_comprometidas(trabajador, date(2025, 1, 3)) == 6
+
+
+def test_horas_comprometidas_no_cuenta_asignaciones_de_otra_semana():
+    sistema, trabajador, labor, franja = construir_sistema_base()
+    sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
+
+    assert sistema.horas_comprometidas(trabajador, date(2025, 1, 5)) == 3  # domingo: misma semana
+    assert sistema.horas_comprometidas(trabajador, date(2025, 1, 6)) == 0  # lunes: semana nueva
+
+
+def test_proponer_asignacion_lanza_error_si_las_horas_acumuladas_superan_el_maximo():
+    sistema, trabajador, labor, franja = construir_sistema_base()
+    trabajador.setter_max_horas_semanales(5)
+    sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))  # 3 h, entra
+
+    with pytest.raises(ValueError, match="excede el límite máximo de horas semanales"):
+        sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 2))  # 3 + 3 = 6 > 5
+
+
+def test_proponer_asignacion_permite_llegar_justo_al_maximo_de_horas():
+    sistema, trabajador, labor, franja = construir_sistema_base()
+    trabajador.setter_max_horas_semanales(6)
+    sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
+
+    asignacion = sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 2))  # 3 + 3 = 6, no supera
+
+    assert asignacion in sistema.asignaciones
