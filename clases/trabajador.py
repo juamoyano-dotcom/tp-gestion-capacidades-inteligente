@@ -57,12 +57,13 @@ class Trabajador:
             self.asignaciones.append(asignacion)
 
     def setter_max_horas_semanales(self, max_horas_semanales: float):
+        """Modifica el máximo de horas semanales. Lanza ValueError si es <= 0."""
         if max_horas_semanales <= 0:
             raise ValueError("El máximo de horas semanales debe ser mayor a cero.")
         self.max_horas_semanales = max_horas_semanales
 
     def tiene_credencial_activa(self, nombre_credencial: str, fecha: date) -> bool:
-    
+        """Indica si posee una credencial con ese nombre que esté activa en `fecha`."""
         for credencial in self.credenciales:
             if credencial.nombre == nombre_credencial: #credencial es un elemento de una lista, que a su vez es un objeto de la clase credenciales
                 if credencial.esta_activa(fecha):
@@ -77,7 +78,7 @@ class Trabajador:
         return True
 
     def credenciales_activas(self, credenciales_requeridas: list, fecha: date) -> bool:
-            
+        """Indica si tiene activas en `fecha` *todas* las credenciales requeridas (reglas 4 y 10)."""
         for nombre in credenciales_requeridas:
             if not self.tiene_credencial_activa(nombre, fecha):
                 return False

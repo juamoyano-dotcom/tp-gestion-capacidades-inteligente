@@ -14,6 +14,12 @@ class Franja(Enum):
 
 
 class FranjaHoraria:
+    """Franja de la jornada con su horario de inicio y fin.
+
+    Dos FranjaHoraria se consideran iguales si tienen la misma `Franja`, sin
+    importar el horario. Así se pueden usar como clave de diccionario o en
+    comparaciones sin depender de la identidad del objeto.
+    """
     def __init__(self, franja: Franja, hora_inicio: time, hora_fin: time):
         self.franja = franja
         self.hora_inicio = hora_inicio

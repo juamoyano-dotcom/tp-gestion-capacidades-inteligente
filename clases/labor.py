@@ -19,8 +19,12 @@ class Labor:
         self.sector = sector
 
     def trabajador_es_apto(self, trab: Trabajador, fecha: date) -> bool:
-       
-        return (
+       """Regla 4: el trabajador tiene todas las habilidades y credenciales activas (en `fecha`) que exige la labor.
+
+        No verifica las credenciales del sector ni las horas disponibles:
+        eso lo evalúa SistemaGestion.motivo_no_apto.
+        """
+       return (
             trab.tiene_habilidades(self.habilidades_requeridas)
             and trab.credenciales_activas(self.credenciales_requeridas, fecha)
         )
