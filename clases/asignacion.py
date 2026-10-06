@@ -20,11 +20,11 @@ class Asignacion:
         self.horas_asignadas = labor.duracion_horas
 
 
-    def aprobar(self, supervisor):
+    def aprobar(self, supervisor) -> None:
         from .supervisor import Supervisor
         # Import dentro del método para evitar el import circular entre supervisor y asignacion.
 
-        if not isinstance(supervisor, Supervisor):
+        if not isinstance(supervisor, Supervisor) :
             raise ValueError("Solo un Supervisor puede aprobar una asignación.")
 
         if self.estado != EstadoAsignacion.PENDIENTE:
@@ -35,6 +35,6 @@ class Asignacion:
         self.estado = EstadoAsignacion.APROBADA
         self.trabajador.agregar_asignacion(self)        
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f"Asignacion({self.id_asignacion}, {self.trabajador.nombre} -> "
                 f"{self.labor.titulo}, {self.fecha}, {self.franja.franja.descripcion}, {self.estado.value})")

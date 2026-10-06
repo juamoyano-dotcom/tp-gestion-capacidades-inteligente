@@ -2,9 +2,17 @@ from .credencial import Credencial
 from datetime import date
 
 class Trabajador:
+    """Miembro del personal técnico.
 
+    Guarda sus datos personales, habilidades, credenciales profesionales, el
+    máximo de horas semanales de su contrato y las asignaciones aprobadas.
+    Las horas ya comprometidas no se guardan acá: las calcula SistemaGestion.
+    """
     def __init__(self, id_trabajador: int, nombre: str, apellido: str, fecha_nacimiento: date, max_horas_semanales: float, **atributos):
+        """Crea el trabajador sin habilidades, credenciales ni asignaciones.
 
+        Los `**atributos` extra se guardan como atributos adicionales (ver
+        `agregar_atributo`). """
         if max_horas_semanales <= 0:
             raise ValueError("El máximo de horas semanales debe ser mayor a cero.")
 
@@ -53,7 +61,7 @@ class Trabajador:
             raise ValueError("El máximo de horas semanales debe ser mayor a cero.")
         self.max_horas_semanales = max_horas_semanales
 
-    def tiene_credencial_activa(self, nombre_credencial: str, fecha: date):
+    def tiene_credencial_activa(self, nombre_credencial: str, fecha: date) -> bool:
     
         for credencial in self.credenciales:
             if credencial.nombre == nombre_credencial: #credencial es un elemento de una lista, que a su vez es un objeto de la clase credenciales
@@ -68,12 +76,12 @@ class Trabajador:
 
         return True
 
-    def credenciales_activas(self, credenciales_requeridas: list, fecha: date):
+    def credenciales_activas(self, credenciales_requeridas: list, fecha: date) -> bool:
             
         for nombre in credenciales_requeridas:
             if not self.tiene_credencial_activa(nombre, fecha):
                 return False
         return True
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Trabajador ({self.id_trabajador}, {self.nombre} {self.apellido})"
