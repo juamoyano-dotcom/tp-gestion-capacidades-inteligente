@@ -7,4 +7,8 @@ from .labor import Labor
 from .capacidadfranja import CapacidadFranjaArea
 from .asignacion import Asignacion
 from .sistemagestion import SistemaGestion
+from .excepciones import (
+    ErrorAsignacion, CapacidadNoConfigurada, LaborYaAsignada,
+    TrabajadorOcupado, TrabajadorNoApto, CargaHorariaExcedida, FranjaCompleta,
+)
 

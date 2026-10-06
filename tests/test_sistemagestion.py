@@ -10,6 +10,15 @@ from clases.credencial import Credencial
 from clases.asignacion import Asignacion, EstadoAsignacion
 from clases.franjahoraria import FranjaHoraria, Franja
 from clases.capacidadfranja import CapacidadFranjaArea
+from clases.excepciones import (
+    ErrorAsignacion,
+    CapacidadNoConfigurada,
+    LaborYaAsignada,
+    TrabajadorOcupado,
+    TrabajadorNoApto,
+    CargaHorariaExcedida,
+    FranjaCompleta,
+)
 
 
 def construir_sector():
@@ -102,7 +111,7 @@ def test_proponer_asignacion_lanza_error_si_labor_ya_tiene_asignacion_para_esa_f
     sistema, trabajador, labor, franja = construir_sistema_base()
     sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
 
-    with pytest.raises(ValueError, match="labor ya tiene una asignación"):
+    with pytest.raises(LaborYaAsignada):
         sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
 
 
@@ -110,7 +119,7 @@ def test_proponer_asignacion_lanza_error_si_trabajador_excede_horas_semanales():
     sistema, trabajador, labor, franja = construir_sistema_base()
     trabajador.max_horas_semanales = 2
 
-    with pytest.raises(ValueError, match="excede el límite máximo de horas semanales"):
+    with pytest.raises(CargaHorariaExcedida):
         sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
 
 
@@ -128,7 +137,7 @@ def test_proponer_asignacion_lanza_error_si_no_existe_capacidad_para_franja_y_ar
     sistema.registrar_trabajador(trabajador)
     sistema.registrar_labor(labor)
 
-    with pytest.raises(ValueError, match="capacidad configurada"):
+    with pytest.raises(CapacidadNoConfigurada):
         sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))
 
 
@@ -184,7 +193,7 @@ def test_proponer_asignacion_lanza_error_si_las_horas_acumuladas_superan_el_maxi
     trabajador.setter_max_horas_semanales(5)
     sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 1))  # 3 h, entra
 
-    with pytest.raises(ValueError, match="excede el límite máximo de horas semanales"):
+    with pytest.raises(CargaHorariaExcedida):
         sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 2))  # 3 + 3 = 6 > 5
 
 
@@ -196,3 +205,100 @@ def test_proponer_asignacion_permite_llegar_justo_al_maximo_de_horas():
     asignacion = sistema.proponer_asignacion(trabajador, labor, franja, date(2025, 1, 2))  # 3 + 3 = 6, no supera
 
     assert asignacion in sistema.asignaciones
+
+
+# ---------------------------------------------------------------------------
+# Issue #14: excepciones propias del dominio
+# ---------------------------------------------------------------------------
+
+def construir_trabajador_apto(id_trabajador):
+    t = Trabajador(id_trabajador, "Ana", "García", date(1990, 1, 1), 40)
+    t.agregar_habilidades("Python")
+    t.agregar_credencial(Credencial("Seguridad Eléctrica", date(2024, 1, 1), date(2026, 1, 1)))
+    return t
+
+
+def construir_labor_n(id_labor, sector):
+    return Labor(id_labor, f"Labor {id_labor}", "desc", 3, ["Python"], ["Seguridad Eléctrica"], sector)
+
+
+def construir_sistema_con_limite(limite):
+    sistema = SistemaGestion()
+    sector = construir_sector()
+    franja = construir_franja()
+    sistema.registrar_area(sector)
+    sistema.registrar_capacidad_franja(CapacidadFranjaArea(sector, franja, limite))
+    return sistema, sector, franja
+
+
+def test_proponer_asignacion_lanza_franja_completa_si_se_alcanza_el_limite():
+    sistema, sector, franja = construir_sistema_con_limite(1)
+    t1, t2 = construir_trabajador_apto(1), construir_trabajador_apto(2)
+    l1, l2 = construir_labor_n(1, sector), construir_labor_n(2, sector)
+    sistema.registrar_trabajador(t1)
+    sistema.registrar_trabajador(t2)
+    sistema.registrar_labor(l1)
+    sistema.registrar_labor(l2)
+
+    sistema.proponer_asignacion(t1, l1, franja, date(2025, 1, 1))
+
+    with pytest.raises(FranjaCompleta):
+        sistema.proponer_asignacion(t2, l2, franja, date(2025, 1, 1))
+
+
+def test_proponer_asignacion_lanza_trabajador_ocupado_si_ya_tiene_esa_franja():
+    sistema, sector, franja = construir_sistema_con_limite(5)
+    t = construir_trabajador_apto(1)
+    l1, l2 = construir_labor_n(1, sector), construir_labor_n(2, sector)
+    sistema.registrar_trabajador(t)
+    sistema.registrar_labor(l1)
+    sistema.registrar_labor(l2)
+
+    sistema.proponer_asignacion(t, l1, franja, date(2025, 1, 1))
+
+    with pytest.raises(TrabajadorOcupado):
+        sistema.proponer_asignacion(t, l2, franja, date(2025, 1, 1))
+
+
+def test_proponer_asignacion_lanza_trabajador_no_apto_si_falta_habilidad():
+    sistema, sector, franja = construir_sistema_con_limite(5)
+    t = Trabajador(1, "Luis", "Pérez", date(1990, 1, 1), 40)  # sin habilidades
+    labor = construir_labor_n(1, sector)
+    sistema.registrar_trabajador(t)
+    sistema.registrar_labor(labor)
+
+    with pytest.raises(TrabajadorNoApto):
+        sistema.proponer_asignacion(t, labor, franja, date(2025, 1, 1))
+
+
+def test_proponer_asignacion_lanza_trabajador_no_apto_si_falta_credencial_del_area():
+    sistema, sector, franja = construir_sistema_con_limite(5)  # el sector exige Seguridad Eléctrica
+    t = Trabajador(1, "Luis", "Pérez", date(1990, 1, 1), 40)
+    t.agregar_habilidades("Python")  # tiene la habilidad pero no la credencial
+    labor = Labor(1, "Labor", "desc", 3, ["Python"], [], sector)
+    sistema.registrar_trabajador(t)
+    sistema.registrar_labor(labor)
+
+    with pytest.raises(TrabajadorNoApto):
+        sistema.proponer_asignacion(t, labor, franja, date(2025, 1, 1))
+
+
+def test_buscar_disponibles_excluye_al_no_apto_sin_lanzar_excepcion():
+    sistema, sector, franja = construir_sistema_con_limite(5)
+    apto = construir_trabajador_apto(1)
+    no_apto = Trabajador(2, "Luis", "Pérez", date(1990, 1, 1), 40)
+    labor = construir_labor_n(1, sector)
+    sistema.registrar_trabajador(apto)
+    sistema.registrar_trabajador(no_apto)
+    sistema.registrar_labor(labor)
+
+    assert sistema.buscar_disponibles(labor, franja, date(2025, 1, 1)) == [apto]
+
+
+@pytest.mark.parametrize("excepcion", [
+    CapacidadNoConfigurada, LaborYaAsignada, TrabajadorOcupado,
+    TrabajadorNoApto, CargaHorariaExcedida, FranjaCompleta,
+])
+def test_las_excepciones_de_dominio_heredan_de_error_asignacion(excepcion):
+    assert issubclass(excepcion, ErrorAsignacion)
+    assert not issubclass(excepcion, ValueError)

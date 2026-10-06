@@ -4,6 +4,15 @@ from .trabajador import Trabajador
 from .labor import Labor
 from .sectortrabajo import SectorTrabajo
 from .franjahoraria import FranjaHoraria
+from .excepciones import (
+    ErrorAsignacion,
+    CapacidadNoConfigurada,
+    LaborYaAsignada,
+    TrabajadorOcupado,
+    TrabajadorNoApto,
+    CargaHorariaExcedida,
+    FranjaCompleta,
+)
 
 class SistemaGestion:
     def __init__(self):
@@ -90,20 +99,22 @@ class SistemaGestion:
         if not area_registrada:
             raise ValueError("El área de la labor no está registrada en el sistema.")
 
-
-
-
-    def motivo_no_apto(self, trabajador, labor, fecha):
-
+    def verificar_apto(self, trabajador, labor, fecha):
+        """Reglas 4, 5 y 10: lanza la excepción que corresponda si el trabajador no puede tomar la labor."""
         if not labor.trabajador_es_apto(trabajador, fecha):
-            return "El trabajador no cumple con las habilidades y credenciales activas requeridas por la labor."
+            raise TrabajadorNoApto(
+                "El trabajador no cumple con las habilidades y credenciales activas requeridas por la labor."
+            )
 
         if not labor.sector.trabajador_cumple_credenciales(trabajador, fecha):
-            return "El trabajador no posee las credenciales obligatorias activas para esta área de trabajo."
-        if self.horas_comprometidas(trabajador, fecha) + labor.duracion_horas > trabajador.max_horas_semanales:
-            return "La asignación excede el límite máximo de horas semanales del trabajador."
+            raise TrabajadorNoApto(
+                "El trabajador no posee las credenciales obligatorias activas para esta área de trabajo."
+            )
 
-        return None
+        if self.horas_comprometidas(trabajador, fecha) + labor.duracion_horas > trabajador.max_horas_semanales:
+            raise CargaHorariaExcedida(
+                "La asignación excede el límite máximo de horas semanales del trabajador."
+            )
 
     def contar_ocupacion(self, area, franja, fecha):
         ocupacion_actual = 0
@@ -138,22 +149,20 @@ class SistemaGestion:
 
         capacidad = self.obtener_capacidad_franja(labor.sector, franja)
         if capacidad is None:
-            raise ValueError("No existe una capacidad configurada para el área y la franja horaria.")
+            raise CapacidadNoConfigurada("No existe una capacidad configurada para el área y la franja horaria.")
 
         if self.labor_ya_asignada(labor, franja, fecha):
-            raise ValueError("La labor ya tiene una asignación comprometida para esta fecha y franja horaria.")
+            raise LaborYaAsignada("La labor ya tiene una asignación comprometida para esta fecha y franja horaria.")
 
         if self.trabajador_ya_ocupado(trabajador, franja, fecha):
-            raise ValueError("El trabajador ya tiene una asignación para esa fecha y franja horaria.")
+            raise TrabajadorOcupado("El trabajador ya tiene una asignación para esa fecha y franja horaria.")
 
 
-        motivo = self.motivo_no_apto(trabajador, labor, fecha)
-        if motivo is not None:
-            raise ValueError(motivo)
+        self.verificar_apto(trabajador, labor, fecha)
 
         ocupacion_actual = self.contar_ocupacion(labor.sector, franja, fecha)
         if not capacidad.tiene_capacidad(ocupacion_actual):
-            raise ValueError("La franja horaria en el área de trabajo seleccionada está completa.")
+            raise FranjaCompleta("La franja horaria en el área de trabajo seleccionada está completa.")
 
         nueva_asignacion = Asignacion(
             id_asignacion=len(self.asignaciones) + 1,
@@ -189,7 +198,7 @@ class SistemaGestion:
 
         capacidad = self.obtener_capacidad_franja(labor.sector, franja)
         if capacidad is None:
-            raise ValueError("No existe una capacidad configurada para el área y la franja horaria.")
+            raise CapacidadNoConfigurada("No existe una capacidad configurada para el área y la franja horaria.")
 
         ocupacion_actual = self.contar_ocupacion(labor.sector, franja, fecha)
         if not capacidad.tiene_capacidad(ocupacion_actual):
@@ -197,11 +206,13 @@ class SistemaGestion:
 
         disponibles = []
         for trab in self.trabajadores:
-            apto = self.motivo_no_apto(trab, labor, fecha) is None
-            ya_ocupado = self.trabajador_ya_ocupado(trab, franja, fecha)
-
-            if apto and not ya_ocupado:
-                disponibles.append(trab)
+            if self.trabajador_ya_ocupado(trab, franja, fecha):
+                continue
+            try:
+                self.verificar_apto(trab, labor, fecha)
+            except ErrorAsignacion:
+                continue
+            disponibles.append(trab)
 
         return disponibles
 
