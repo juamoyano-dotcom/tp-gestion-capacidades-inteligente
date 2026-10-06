@@ -15,6 +15,14 @@ from .excepciones import (
 )
 
 class SistemaGestion:
+    """Núcleo del sistema: registra entidades, propone asignaciones y busca personal disponible.
+ 
+    Concentra las reglas que involucran a varias clases a la vez (aptitud,
+    horas semanales, capacidad de franja, exclusividad). Las asignaciones son
+    la única fuente de verdad: horas comprometidas y ocupación se calculan a
+    partir de ellas, no se guardan en contadores.
+    """
+ 
     def __init__(self):
         self.trabajadores = []
         self.labores = []
@@ -48,7 +56,7 @@ class SistemaGestion:
         self.capacidades_franja[clave] = capacidad_franja
 
     @staticmethod
-    def misma_franja(franja_a, franja_b):
+    def misma_franja(franja_a, franja_b) -> bool:
         return (
             franja_a is not None
             and franja_b is not None
@@ -59,7 +67,12 @@ class SistemaGestion:
     def obtener_capacidad_franja(self, area, franja):
         return self.capacidades_franja.get((area.id, franja.franja))
 
-    def validar_parametros_asignacion(self, trabajador, labor, franja, fecha):
+    def validar_parametros_asignacion(self, trabajador, labor, franja, fecha) -> None:
+        """Valida los datos de entrada de una asignación.
+ 
+        Lanza ValueError si falta algún dato o si el trabajador, la labor o el
+        área de la labor no están registrados; TypeError si `fecha` no es date.
+        """
         if trabajador is None or labor is None or franja is None:
             raise ValueError("El trabajador, la labor y la franja son obligatorios.")
 
@@ -116,14 +129,14 @@ class SistemaGestion:
                 "La asignación excede el límite máximo de horas semanales del trabajador."
             )
 
-    def contar_ocupacion(self, area, franja, fecha):
+    def contar_ocupacion(self, area, franja, fecha) -> int:
         ocupacion_actual = 0
         for asig in self.asignaciones:
             if asig.fecha == fecha and asig.labor.sector.id == area.id and self.misma_franja(asig.franja, franja):
                 ocupacion_actual += 1
         return ocupacion_actual
 
-    def trabajador_ya_ocupado(self, trabajador, franja, fecha):
+    def trabajador_ya_ocupado(self, trabajador, franja, fecha) -> bool:
         for asig in self.asignaciones:
             if (
                 asig.trabajador.id_trabajador == trabajador.id_trabajador
@@ -133,7 +146,7 @@ class SistemaGestion:
                 return True
         return False
 
-    def labor_ya_asignada(self, labor, franja, fecha):
+    def labor_ya_asignada(self, labor, franja, fecha) -> bool:
         for asig in self.asignaciones:
             if (
                 asig.labor.id_labor == labor.id_labor
@@ -144,7 +157,15 @@ class SistemaGestion:
         return False
 
 
-    def proponer_asignacion(self, trabajador, labor, franja, fecha):
+    def proponer_asignacion(self, trabajador, labor, franja, fecha) -> Asignacion:
+        """Reglas 4 a 7, 9 y 10: propone una asignación y la deja en estado Pendiente.
+ 
+        Valida, en orden: parámetros, capacidad configurada, exclusividad de la
+        labor, disponibilidad del trabajador en la franja, aptitud y horas
+        semanales, y cupo de la franja. Si falla alguna lanza ValueError con el
+        motivo. Al quedar registrada, sus horas cuentan en la carga semanal
+        del trabajador (regla 9), aún antes de que el supervisor la apruebe.
+        """
         self.validar_parametros_asignacion(trabajador, labor, franja, fecha)
 
         capacidad = self.obtener_capacidad_franja(labor.sector, franja)
@@ -176,7 +197,7 @@ class SistemaGestion:
         self.asignaciones.append(nueva_asignacion) 
         return nueva_asignacion
     
-    def buscar_disponibles(self, labor, franja, fecha):
+    def buscar_disponibles(self, labor, franja, fecha) -> list:
         if labor is None or franja is None:
             raise ValueError("La labor y la franja son obligatorias.")
         if not isinstance(fecha, date):
@@ -216,7 +237,7 @@ class SistemaGestion:
 
         return disponibles
 
-    def horas_comprometidas(self, trabajador, fecha) :
+    def horas_comprometidas(self, trabajador, fecha) -> int:
         """
         Horas ya asignadas al trabajador en la semana (lunes a domingo) de `fecha`.
 
