@@ -4,7 +4,7 @@ from .asignacion import Asignacion, EstadoAsignacion
 
 class Supervisor(Trabajador):
 
-    def formalizar_asignacion(self, asignacion: Asignacion):
+    def formalizar_asignacion(self, asignacion: Asignacion) -> Asignacion:
     
         if asignacion.estado is not EstadoAsignacion.PENDIENTE:
             raise ValueError(f"No se puede formalizar una asignación en estado '{asignacion.estado.value}' (sólo se formalizan asignaciones 'Pendiente').")
@@ -12,5 +12,5 @@ class Supervisor(Trabajador):
         asignacion.aprobar(self) #se pone el self porque aprobar requiere saber si el que llama al metodo es un supervisor
         return asignacion
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Supervisor({self.id_trabajador}, {self.nombre} {self.apellido})"

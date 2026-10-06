@@ -25,11 +25,11 @@ class FranjaHoraria:
         if self.hora_inicio == self.hora_fin:
             raise ValueError("La hora de inicio debe ser distinta a la hora de fin.")
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return isinstance(other, FranjaHoraria) and self.franja == other.franja
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.franja)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"FranjaHoraria({self.franja.descripcion})"

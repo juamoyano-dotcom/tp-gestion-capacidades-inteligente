@@ -18,12 +18,12 @@ class Labor:
         self.credenciales_requeridas = credenciales_requeridas or []
         self.sector = sector
 
-    def trabajador_es_apto(self, trab: Trabajador, fecha: date):
+    def trabajador_es_apto(self, trab: Trabajador, fecha: date) -> bool:
        
         return (
             trab.tiene_habilidades(self.habilidades_requeridas)
             and trab.credenciales_activas(self.credenciales_requeridas, fecha)
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Labor({self.id_labor}, {self.titulo})"
