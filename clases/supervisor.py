@@ -15,6 +15,10 @@ class Supervisor(Trabajador):
 
         asignacion.aprobar(self) #se pone el self porque aprobar requiere saber si el que llama al metodo es un supervisor
         return asignacion
-
+    
+    def rechazar_asignacion(self, asignacion: Asignacion, motivo="")-> Asignacion:
+        asignacion.rechazar(self, motivo)
+        return asignacion
+    
     def __repr__(self) -> str:
         return f"Supervisor({self.id_trabajador}, {self.nombre} {self.apellido})"
