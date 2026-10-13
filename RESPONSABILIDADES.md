@@ -31,6 +31,7 @@ Las clases principales se encuentran dentro del paquete `clases`:
 - `SectorTrabajo`
 - `SistemaGestion`
 - `Supervisor`
+- `Excepciones`
 
 El archivo `clases/__init__.py` importa y expone todas las clases del paquete para facilitar su utilización desde otros módulos.
 
@@ -44,11 +45,10 @@ Representa una franja de trabajo. La enumeración `Franja` define `MAÑANA`, `TA
 
 Sus responsabilidades son:
 
-- Identificar la franja horaria.
-- Representar las franjas como mañana, tarde o noche.
-- Permitir asociar una asignación con un período horario determinado.
-
-No controla asignaciones ni capacidad; esos controles los realiza `SistemaGestion` mediante `CapacidadFranjaArea`.
+- Identificar la categoría de franja (`MAÑANA`, `TARDE` o `NOCHE`).
+- Guardar su hora de inicio y fin y rechazar franjas con la misma hora de inicio y fin.
+- Considerar iguales dos objetos `FranjaHoraria` si tienen la misma categoría, independientemente de sus horas.
+- Permitir asociar una asignación con una franja horaria.
 
 ---
 
@@ -59,14 +59,13 @@ Representa a una persona disponible para realizar labores.
 Sus responsabilidades son:
 
 - Almacenar sus datos identificatorios.
-- Mantener sus habilidades o competencias y sus credenciales profesionales.
+- Mantener sus habilidades o competencias, credenciales profesionales y asignaciones aprobadas.
 - Registrar el límite máximo de horas semanales.
-- Llevar el control de las horas ya asignadas.
-- Permitir verificar si es apto para una labor.
-- Permitir comprobar si posee las credenciales requeridas y vigentes.
-- Controlar que una nueva asignación no supere su carga horaria máxima.
+- Permitir consultar si posee las habilidades y las credenciales requeridas y vigentes en una fecha.
+- Permitir agregar y consultar atributos adicionales sin sobrescribir nombres de atributos o métodos propios.
+- Validar que el máximo de horas semanales sea mayor que cero al crear o modificar el límite.
 
-El trabajador no calcula ni almacena sus horas semanales. `SistemaGestion` las calcula a partir de las asignaciones del sistema para la semana consultada.
+El trabajador no calcula ni almacena las horas semanales ya comprometidas. `SistemaGestion` las calcula a partir de las asignaciones aprobadas para la semana consultada.
 
 ---
 
@@ -76,10 +75,10 @@ Es una subclase de `Trabajador` con facultades adicionales.
 
 Además de poseer las capacidades de un trabajador, sus responsabilidades son:
 
-- Validar asignaciones pendientes.
-- Formalizar una asignación cambiando estado de `Pendiente` a `Aprobada`.
+- Formalizar asignaciones pendientes, cambiándolas a `Aprobada`.
+- Rechazar asignaciones pendientes, guardando el motivo del rechazo.
 
-Un supervisor puede realizar labores como cualquier otro trabajador, pero también puede aprobar asignaciones.
+Un supervisor puede realizar labores como cualquier otro trabajador. Para la aprobación con revalidación y limpieza en cascada de propuestas conflictivas, debe usarse `SistemaGestion.aprobar_asignacion`; llamar directamente a `formalizar_asignacion` solo cambia el estado y registra la asignación en el trabajador.
 
 ---
 
@@ -91,10 +90,10 @@ Sus responsabilidades son:
 
 - Almacenar el nombre de la credencial.
 - Registrar la fecha de obtención y la fecha de vencimiento.
-- Determinar si la credencial está activa en una fecha determinada.
-- Permitir validar si un trabajador puede realizar una labor o trabajar en un área.
+- Rechazar fechas de obtención posteriores a la fecha de vencimiento.
+- Determinar si está activa en una fecha determinada, considerando inclusivas ambas fechas.
 
-Una credencial se considera válida únicamente cuando se encuentra vigente en la fecha de la asignación.
+`Trabajador` utiliza esta información para validar las credenciales requeridas por una labor o por un sector en la fecha de la asignación.
 
 ---
 
@@ -110,9 +109,10 @@ Sus responsabilidades son:
 - Definir las habilidades necesarias.
 - Definir las credenciales requeridas.
 - Asociar la labor con un sector o área de trabajo.
-- Proporcionar la información necesaria para determinar si un trabajador es apto.
+- Indicar su frecuencia (`DIARIA` o `SEMANAL`) y la cantidad de trabajadores requeridos.
+- Proporcionar la validación de habilidades y credenciales propias de la labor.
 
-Una labor solo puede asignarse a un trabajador que cumpla todos sus requisitos.
+La duración debe ser mayor que cero. La labor comprueba los requisitos que le corresponden; `SistemaGestion` coordina además la validación de credenciales del sector, disponibilidad y carga.
 
 ---
 
@@ -125,8 +125,7 @@ Sus responsabilidades son:
 - Identificar el sector de trabajo.
 - Almacenar su nombre o descripción.
 - Mantener las credenciales obligatorias para trabajar en el área.
-- Asociar capacidades máximas de personal a sus franjas horarias.
-- Permitir validar si un trabajador cumple los requisitos específicos del sector.
+- Delegar la validación de sus credenciales obligatorias a `Trabajador`.
 
 Además de los requisitos de una labor, el trabajador debe contar con todas las credenciales obligatorias del sector.
 
@@ -139,12 +138,10 @@ Representa la capacidad máxima de trabajadores permitida para una combinación 
 Sus responsabilidades son:
 
 - Asociar un sector con una franja horaria.
-- Definir la cantidad máxima de trabajadores permitidos.
-- Contabilizar las asignaciones existentes.
-- Determinar si todavía hay capacidad disponible.
-- Impedir nuevas asignaciones cuando la franja se encuentra completa.
+- Definir un límite de personal mayor que cero para esa combinación.
+- Indicar si la ocupación actual está por debajo del límite.
 
-`SistemaGestion` contabiliza las asignaciones existentes y utiliza esta clase para impedir superar el límite del área y la franja.
+No almacena ni contabiliza la ocupación. `SistemaGestion` cuenta las asignaciones aprobadas del sector, franja y fecha, y utiliza esta clase para comprobar si queda capacidad.
 
 ---
 
@@ -157,12 +154,31 @@ Sus responsabilidades son:
 - Identificar la asignación.
 - Asociar un trabajador, una labor, una franja y una fecha.
 - Iniciar con estado `Pendiente`.
-- Obtener sus horas de la duración definida para la labor.
-- Cambiar a `Aprobada` únicamente cuando la aprueba un `Supervisor`.
-- Agregar la asignación aprobada a la lista del trabajador.
+- Guardar las horas asignadas con la duración de la labor al momento de crearla.
+- Permitir la aprobación o el rechazo por un `Supervisor` solo mientras esté pendiente.
+- Guardar el motivo cuando se rechaza.
+- Agregar la asignación al historial del trabajador cuando se aprueba.
 - Mostrar en su representación textual el trabajador, la labor, la fecha, la franja y el estado.
 
-Mientras está pendiente, la propuesta ya forma parte de `SistemaGestion.asignaciones` y cuenta para capacidad, exclusividad y horas semanales.
+Una asignación puede estar `Pendiente`, `Aprobada` o `Rechazada`. Mientras está pendiente forma parte de `SistemaGestion.asignaciones`, pero no reserva recursos ni se agrega a la lista del trabajador.
+
+---
+
+### `EstadoAsignacion`
+
+Enumera los estados posibles de una asignación: `PENDIENTE`, `APROBADA` y `RECHAZADA`. `Asignacion` y `SistemaGestion` utilizan estos estados para controlar las transiciones y determinar qué asignaciones ocupan recursos.
+
+---
+
+### `Frecuencia`
+
+Enumera las frecuencias admitidas para una labor: `DIARIA` y `SEMANAL`. La frecuencia determina el período en que `SistemaGestion` contabiliza cuántos trabajadores ya fueron asignados a esa labor.
+
+---
+
+### `ErrorAsignacion` y excepciones derivadas
+
+Representan rechazos de reglas de negocio al proponer, comprobar o aprobar asignaciones. `ErrorAsignacion` es la excepción base; sus especializaciones identifican falta de capacidad configurada, labor cubierta, trabajador ocupado o no apto, exceso de horas y franja completa. Así, `buscar_disponibles` puede excluir candidatos que incumplen estas reglas sin ocultar errores ajenos a ellas.
 
 ---
 
@@ -176,15 +192,16 @@ Sus responsabilidades son:
   duplicados.
 - Registrar capacidades por sector y franja, sin duplicar una combinación.
 - Validar que los objetos usados en una asignación estén registrados.
-- Verificar habilidades y credenciales activas de la labor y del sector.
-- Controlar la carga horaria semanal comprometida.
-- Controlar la capacidad de cada sector y franja.
-- Impedir que un trabajador tenga dos asignaciones en la misma fecha y franja.
-- Impedir que una labor tenga dos asignaciones en la misma fecha y franja.
-- Crear asignaciones en estado `Pendiente`.
-- Buscar trabajadores disponibles para una labor, fecha y franja.
-- Contabilizar la ocupación de un sector y franja para una fecha.
-- Calcular las horas comprometidas de un trabajador en la semana de una fecha.
+- Verificar las habilidades y credenciales vigentes requeridas por la labor y el sector.
+- Comprobar conflictos contra las asignaciones aprobadas: trabajador ocupado en la fecha y franja, labor ya cubierta en su período, límite semanal de horas y capacidad del sector/franja/fecha.
+- Proponer asignaciones en estado `Pendiente`, evitando duplicar una propuesta pendiente idéntica.
+- Revalidar una propuesta pendiente al aprobarla, porque el sistema puede haber cambiado desde que se creó.
+- Después de una aprobación, rechazar automáticamente las propuestas pendientes que hayan quedado en conflicto, guardando el motivo.
+- Buscar trabajadores disponibles aplicando los mismos requisitos y conflictos de una propuesta.
+- Consultar asignaciones aprobadas o pendientes, labores aún por cubrir y trabajadores con horas disponibles.
+- Calcular la ocupación y las horas comprometidas a partir de las asignaciones aprobadas, sin mantener contadores duplicados.
+
+Las horas se calculan por semana calendario, de lunes a domingo. Para cubrir una labor, el sistema cuenta las asignaciones aprobadas de esa labor dentro del período: el día de la fecha para frecuencia diaria y la semana de lunes a domingo para frecuencia semanal. La ocupación de capacidad, en cambio, se calcula para una fecha concreta y una categoría de franja.
 
 Los supervisores, credenciales y franjas se crean como objetos y se utilizan al registrar o validar otras entidades; no tienen registros independientes dentro del sistema.
 
@@ -192,32 +209,27 @@ Los supervisores, credenciales y franjas se crean como objetos y se utilizan al 
 
 ## Flujo de creación de una asignación
 
-Para proponer una asignación, el sistema realiza estas validaciones:
+Al proponer una asignación, el sistema:
 
-1. Verifica que trabajador, labor, franja y fecha sean válidos.
-2. Verifica que el trabajador, la labor y el sector estén registrados.
-3. Verifica que exista una capacidad configurada para el sector y la franja.
-4. Comprueba que la labor no tenga otra asignación para esa fecha y franja.
-5. Comprueba que el trabajador no esté ocupado en esa fecha y franja.
-6. Comprueba las habilidades y credenciales activas requeridas por la labor.
-7. Comprueba las credenciales obligatorias y activas del sector.
-8. Verifica que no se supere el límite semanal del trabajador.
-9. Verifica que la franja todavía tenga capacidad disponible.
-10. Crea la asignación en estado `Pendiente` dentro del sistema.
+1. Valida los parámetros y que el trabajador, la labor y el sector estén registrados.
+2. Rechaza una propuesta pendiente idéntica para el mismo trabajador, labor, fecha y franja.
+3. Comprueba las habilidades y credenciales vigentes exigidas por la labor y el sector.
+4. Crea una asignación candidata y verifica que no entre en conflicto con lo ya aprobado: ocupación del trabajador, cobertura de la labor en su período, máximo semanal de horas y capacidad configurada/disponible.
+5. Si pasa las validaciones, la agrega a `SistemaGestion.asignaciones` en estado `Pendiente`.
 
-Las horas de una propuesta pendiente ya se incluyen en el cálculo semanal. Laasignación se agrega a la lista del trabajador cuando un supervisor la aprueba.
+Las propuestas pendientes no reservan horas, cupos ni exclusividad y no bloquean otras propuestas. Por eso pueden coexistir alternativas; solo las asignaciones aprobadas cuentan para los límites y la ocupación.
 
-Las horas semanales no se reinician modificando un contador: se calculan según las fechas de las asignaciones. Por eso, las asignaciones de semanas anteriores no se contabilizan al consultar una semana nueva.
+Al aprobar, se usa `SistemaGestion.aprobar_asignacion`: este vuelve a comprobar los conflictos contra las aprobadas, formaliza la asignación y luego revisa las propuestas pendientes restantes. Las que ya no son válidas se rechazan automáticamente con el motivo correspondiente. Las horas y la ocupación se calculan desde las aprobadas, por lo que las rechazadas y las pendientes no se contabilizan.
 
 ---
 
 ## Relaciones principales
 
 - Un `Trabajador` puede tener varias `Credencial` y `Asignacion` aprobadas.
-- Una `Labor` pertenece a un `SectorTrabajo` y requiere habilidades y credenciales.
+- Una `Labor` pertenece a un `SectorTrabajo`, requiere habilidades y credenciales, tiene una frecuencia y define cuántos trabajadores requiere.
 - `SistemaGestion` puede registrar varias `CapacidadFranjaArea`.
 - Una `CapacidadFranjaArea` relaciona un `SectorTrabajo` con una `FranjaHoraria` y un límite de personal.
-- Una `Asignacion` relaciona un `Trabajador`, una `Labor`, una `FranjaHoraria` y una fecha.
+- Una `Asignacion` relaciona un `Trabajador`, una `Labor`, una `FranjaHoraria` y una fecha; su estado determina si participa en los cálculos de recursos.
 - Un `Supervisor` es un trabajador con permisos adicionales.
 - `SistemaGestion` administra las entidades registradas y las reglas del sistema.
 
@@ -225,10 +237,6 @@ Las horas semanales no se reinician modificando un contador: se calculan según 
 
 ## Archivo `clases/__init__.py`
 
-El archivo `__init__.py` permite importar las clases del paquete de forma centralizada.
-
-En lugar de importar cada clase desde su archivo individual.
-
-Esto mejora la organización y facilita el uso del sistema desde otros módulos.
+El archivo `__init__.py` expone las clases, enumeraciones y excepciones del paquete para permitir importarlas de forma centralizada desde otros módulos.
 
 ---
