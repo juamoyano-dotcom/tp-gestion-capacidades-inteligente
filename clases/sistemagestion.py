@@ -22,8 +22,8 @@ class SistemaGestion:
     la única fuente de verdad: horas comprometidas y ocupación se calculan a
     partir de ellas, no se guardan en contadores.
 
-    Una propuesta (Pendiente) NO reserva recursos: solo las asignaciones
-    Aprobadas ocupan trabajador, labor, cupo de franja y horas.
+    Una propuesta Pendiente reserva trabajador, labor, cupo de franja y horas.
+    Si se rechaza, deja de contar para esos recursos.
     """  # ~ CAMBIADO: antes la docstring no aclaraba este criterio
 
     def __init__(self):
@@ -116,11 +116,7 @@ class SistemaGestion:
             raise ValueError("El área de la labor no está registrada en el sistema.")
 
     def verificar_apto(self, trabajador, labor, fecha):
-        """Reglas 4 y 5: lanza TrabajadorNoApto si el trabajador no cumple habilidades o credenciales.
-
-        Solo mira condiciones estáticas del trabajador. Las que dependen de lo
-        aprobado (horas, ocupación, cupo) están en verificar_conflictos.
-        """  # ~ CAMBIADO: docstring (ya no incluye la regla de horas)
+        """Valida habilidades y credenciales requeridas por la labor y el área."""
         if not labor.trabajador_es_apto(trabajador, fecha):
             raise TrabajadorNoApto(
                 "El trabajador no cumple con las habilidades y credenciales activas requeridas por la labor."
@@ -131,46 +127,50 @@ class SistemaGestion:
                 "El trabajador no posee las credenciales obligatorias activas para esta área de trabajo."
             )
 
-        # borre el chequeo de CargaHorariaExcedida que estaba aca
-        # las horas dependen de qué se aprobó, igual que el resto de los conflictos
-        # Ahora lo valida verificar_conflictos, para no duplicar la regla.
-
     def verificar_conflictos(self, asig) -> None:                      # + NUEVO (método completo)
         """Lanza la excepción que corresponda si la asignación `asig` (pendiente o candidata)
-        choca con lo ya aprobado: trabajador ocupado, labor cubierta en su período,
+        choca con otras propuestas o asignaciones aprobadas: trabajador ocupado, labor cubierta en su período,
         horas semanales excedidas o franja sin cupo.
 
         Por qué existe: estas validaciones se necesitan en tres momentos (proponer,
         aprobar y limpiar pendientes en cascada). Con un solo método los tres usan
         exactamente el mismo criterio.
         """
-        if self.trabajador_ya_ocupado(asig.trabajador, asig.franja, asig.fecha):
-            raise TrabajadorOcupado("El trabajador ya tiene otra asignación aprobada en esa fecha y franja horaria.")
-
-        if self.labor_completa_en_periodo(asig.labor, asig.fecha):
+        if self.labor_completa_en_periodo(asig.labor, asig.fecha, excluir=asig):
             raise LaborYaAsignada("La labor ya tiene todos los trabajadores requeridos en este período.")
 
-        if self.horas_comprometidas(asig.trabajador, asig.fecha) + asig.horas_asignadas > asig.trabajador.max_horas_semanales:
+        if self.trabajador_ya_ocupado(asig.trabajador, asig.franja, asig.fecha, excluir=asig):
+            raise TrabajadorOcupado("El trabajador ya tiene otra asignación pendiente o aprobada en esa fecha y franja horaria.")
+
+        if self.horas_comprometidas(asig.trabajador, asig.fecha, excluir=asig) + asig.horas_asignadas > asig.trabajador.max_horas_semanales:
             raise CargaHorariaExcedida("La asignación excede el límite máximo de horas semanales del trabajador.")
 
         capacidad = self.obtener_capacidad_franja(asig.labor.sector, asig.franja)
         if capacidad is None:
             raise CapacidadNoConfigurada("No existe una capacidad configurada para el área y la franja horaria.")
 
-        if not capacidad.tiene_capacidad(self.contar_ocupacion(asig.labor.sector, asig.franja, asig.fecha)):
+        if not capacidad.tiene_capacidad(self.contar_ocupacion(asig.labor.sector, asig.franja, asig.fecha, excluir=asig)):
             raise FranjaCompleta("La franja horaria en el área de trabajo seleccionada está completa.")
 
-    def contar_ocupacion(self, area, franja, fecha) -> int:
+    def contar_ocupacion(self, area, franja, fecha, excluir=None) -> int:
         ocupacion_actual = 0
-        for asig in self.asignaciones_aprobadas():   # ~ CAMBIADO (antes: self.asignaciones). Solo las aprobadas ocupan cupo.
-            if asig.fecha == fecha and asig.labor.sector.id == area.id and self.misma_franja(asig.franja, franja):
+        for asig in self.asignaciones:
+            if (
+                asig is not excluir
+                and asig.estado in (EstadoAsignacion.PENDIENTE, EstadoAsignacion.APROBADA)
+                and asig.fecha == fecha
+                and asig.labor.sector.id == area.id
+                and self.misma_franja(asig.franja, franja)
+            ):
                 ocupacion_actual += 1
         return ocupacion_actual
 
-    def trabajador_ya_ocupado(self, trabajador, franja, fecha) -> bool:
-        for asig in self.asignaciones_aprobadas():   # ~ CAMBIADO. Solo una aprobada bloquea al trabajador.
+    def trabajador_ya_ocupado(self, trabajador, franja, fecha, excluir=None) -> bool:
+        for asig in self.asignaciones:
             if (
-                asig.trabajador.id_trabajador == trabajador.id_trabajador
+                asig is not excluir
+                and asig.estado in (EstadoAsignacion.PENDIENTE, EstadoAsignacion.APROBADA)
+                and asig.trabajador.id_trabajador == trabajador.id_trabajador
                 and asig.fecha == fecha
                 and self.misma_franja(asig.franja, franja)
             ):
@@ -180,51 +180,45 @@ class SistemaGestion:
     # borre labor_ya_asignada. La reemplaza labor_completa_en_periodo
     # mira el período de la labor (día o semana) y cuántos trabajadores necesita
 
-    def asignaciones_aprobadas(self):                # + NUEVO: lo que realmente ocupa recursos
+    def asignaciones_aprobadas(self):
         return [a for a in self.asignaciones if a.estado == EstadoAsignacion.APROBADA]
 
-    def asignaciones_pendientes(self):               # + NUEVO: lo que el supervisor decide y se revalida en cascada
+    def asignaciones_pendientes(self):
         return [a for a in self.asignaciones if a.estado == EstadoAsignacion.PENDIENTE]
 
-    def rango_periodo(self, labor, fecha):           # + NUEVO: diaria = ese día; semanal = lunes a domingo
+    def rango_periodo(self, labor, fecha):
         if labor.frecuencia == Frecuencia.DIARIA:
             return fecha, fecha
         lunes = fecha - timedelta(days=fecha.weekday())
         return lunes, lunes + timedelta(days=6)
 
-    def labor_completa_en_periodo(self, labor, fecha):   # + NUEVO: ¿ya hay aprobadas suficientes en el período?
+    def labor_completa_en_periodo(self, labor, fecha, excluir=None):
         inicio, fin = self.rango_periodo(labor, fecha)
         asignados = sum(
-            1 for a in self.asignaciones_aprobadas()
-            if a.labor.id_labor == labor.id_labor and inicio <= a.fecha <= fin
+            1 for a in self.asignaciones
+            if a is not excluir
+            and a.estado in (EstadoAsignacion.PENDIENTE, EstadoAsignacion.APROBADA)
+            and a.labor.id_labor == labor.id_labor
+            and inicio <= a.fecha <= fin
         )
         return asignados >= labor.trabajadores_requeridos
 
-    def labores_a_cubrir(self, fecha):               # + NUEVO: el "plan del día"
+    def labores_a_cubrir(self, fecha):
         return [l for l in self.labores if not self.labor_completa_en_periodo(l, fecha)]
 
-    def trabajadores_con_horas(self, fecha):         # + NUEVO: quiénes no llegaron a su máximo semanal
+    def trabajadores_con_horas(self, fecha):
         return [t for t in self.trabajadores
                 if self.horas_comprometidas(t, fecha) < t.max_horas_semanales]
 
     def proponer_asignacion(self, trabajador, labor, franja, fecha) -> Asignacion:
         """Propone una asignación y la deja en estado Pendiente.
 
-        Valida parámetros, propuesta duplicada, aptitud y conflictos con lo ya
-        aprobado. Una propuesta no reserva recursos: pueden coexistir varias
-        alternativas pendientes, y el supervisor elige con aprobar_asignacion.
+        Valida parámetros, aptitud y conflictos con otras asignaciones pendientes
+        o aprobadas. La propuesta reserva recursos hasta que se aprueba o rechaza.
         """  
         self.validar_parametros_asignacion(trabajador, labor, franja, fecha)
 
-        # nuevo --> evita proponer exactamente lo mismo dos veces (al no haber reserva, nada lo impedía)
-        for a in self.asignaciones_pendientes():
-            if (a.trabajador.id_trabajador == trabajador.id_trabajador
-                    and a.labor.id_labor == labor.id_labor
-                    and a.fecha == fecha
-                    and self.misma_franja(a.franja, franja)):
-                raise ErrorAsignacion("Ya existe una propuesta pendiente igual.")
-
-        self.verificar_apto(trabajador, labor, fecha)   # igual que antes (ahora sin el chequeo de horas)
+        self.verificar_apto(trabajador, labor, fecha)
 
         # cambio --> se crea ANTES de validar, porque verificar_conflictos recibe una Asignacion
         nueva_asignacion = Asignacion(
@@ -252,8 +246,7 @@ class SistemaGestion:
         if asignacion.estado != EstadoAsignacion.PENDIENTE:
             raise ValueError(f"No se puede aprobar una asignación en estado '{asignacion.estado.value}'.")
 
-        # revalida: pudo quedar inválida desde que se propuso
-        # las propuestas pendientes no reservan nada, y entre el momento en que se propone y el momento en que el supervisor decide, el estado del sistema puede cambiar
+        # Revalida excluyendo la propia propuesta, que ya está reservando sus recursos.
         self.verificar_conflictos(asignacion)
 
         # aprueba formalizar_asignacion sin modificarlo
@@ -305,9 +298,9 @@ class SistemaGestion:
         # buscar_disponibles y proponer_asignacion usan los mismos criterios
         # nunca devuelve como "disponible" a alguien que proponer_asignacion luego rechace
 
-    def horas_comprometidas(self, trabajador, fecha) -> int:
+    def horas_comprometidas(self, trabajador, fecha, excluir=None) -> int:
         """
-        Horas ya aprobadas del trabajador en la semana (lunes a domingo) de `fecha`.
+        Horas pendientes o aprobadas del trabajador en la semana (lunes a domingo) de `fecha`.
 
         Decisión de diseño: no se guarda un contador. Se calcula desde
         self.asignaciones, que es la única fuente de verdad. Así, las consultas no
@@ -316,8 +309,11 @@ class SistemaGestion:
 
         lunes = fecha - timedelta(days=fecha.weekday())
         domingo = lunes + timedelta(days=6)
-        return sum(a.horas_asignadas
-        for a in self.asignaciones_aprobadas()   
-            if a.trabajador.id_trabajador == trabajador.id_trabajador
+        return sum(
+            a.horas_asignadas
+            for a in self.asignaciones
+            if a.estado in (EstadoAsignacion.PENDIENTE, EstadoAsignacion.APROBADA)
+            and a is not excluir
+            and a.trabajador.id_trabajador == trabajador.id_trabajador
             and lunes <= a.fecha <= domingo
         )
