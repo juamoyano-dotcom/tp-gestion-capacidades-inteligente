@@ -13,14 +13,12 @@ class Trabajador:
 
         Los `**atributos` extra se guardan como atributos adicionales (ver
         `agregar_atributo`). """
-        if max_horas_semanales <= 0:
-            raise ValueError("El máximo de horas semanales debe ser mayor a cero.")
-
+        
         self.id_trabajador = id_trabajador
         self.nombre = nombre
         self.apellido = apellido
         self.fecha_nacimiento = fecha_nacimiento
-        self.max_horas_semanales = max_horas_semanales
+        self.max_horas_semanales = max_horas_semanales # pasa por el setter, que valida
         self.habilidades = []       #tambien se entiende como 'competencias' --> es una lista str
         self.credenciales = []      #lista de objetos de la clase Credencial
         self.asignaciones = []
@@ -29,7 +27,19 @@ class Trabajador:
         #intención: el acceso y modificación de los atributos adicionales se haga mediante obtener_atributo() y agregar_atributo()
         for clave, valor in atributos.items():
             self.agregar_atributo(clave, valor)  
-        
+
+
+    @property
+    def max_horas_semanales(self) -> float:
+        return self._max_horas_semanales
+
+    @max_horas_semanales.setter
+    def max_horas_semanales(self, valor: float) -> None:
+        """Modifica el máximo de horas semanales. Lanza ValueError si es <= 0 (regla 5)."""
+        if valor <= 0:
+            raise ValueError("El máximo de horas semanales debe ser mayor a cero.")
+        self._max_horas_semanales = valor
+
     def agregar_credencial(self, credencial: Credencial):
         self.credenciales.append(credencial)
 
@@ -55,12 +65,6 @@ class Trabajador:
     def agregar_asignacion(self, asignacion): #asignacion es un objeto de la clase Asignacion --> no pongo el tipo de dato porque sino hay un ciclo infinito de imports
         if asignacion not in self.asignaciones:
             self.asignaciones.append(asignacion)
-
-    def setter_max_horas_semanales(self, max_horas_semanales: float):
-        """Modifica el máximo de horas semanales. Lanza ValueError si es <= 0."""
-        if max_horas_semanales <= 0:
-            raise ValueError("El máximo de horas semanales debe ser mayor a cero.")
-        self.max_horas_semanales = max_horas_semanales
 
     def tiene_credencial_activa(self, nombre_credencial: str, fecha: date) -> bool:
         """Indica si posee una credencial con ese nombre que esté activa en `fecha`."""

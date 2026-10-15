@@ -103,8 +103,7 @@
         "Seguridad Eléctrica"
       ],
       "id_sector": 1,
-      "frecuencia": "Diaria",
-      "trabajadores_requeridos": 1
+      "frecuencia": "Diaria"
     }
   ],
   "asignaciones": []

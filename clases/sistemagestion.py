@@ -137,7 +137,7 @@ class SistemaGestion:
         exactamente el mismo criterio.
         """
         if self.labor_completa_en_periodo(asig.labor, asig.fecha, excluir=asig):
-            raise LaborYaAsignada("La labor ya tiene todos los trabajadores requeridos en este período.")
+            raise LaborYaAsignada("La labor ya tiene una asignación en este período.")
 
         if self.trabajador_ya_ocupado(asig.trabajador, asig.franja, asig.fecha, excluir=asig):
             raise TrabajadorOcupado("El trabajador ya tiene otra asignación pendiente o aprobada en esa fecha y franja horaria.")
@@ -194,14 +194,17 @@ class SistemaGestion:
 
     def labor_completa_en_periodo(self, labor, fecha, excluir=None):
         inicio, fin = self.rango_periodo(labor, fecha)
-        asignados = sum(
-            1 for a in self.asignaciones
-            if a is not excluir
-            and a.estado in (EstadoAsignacion.PENDIENTE, EstadoAsignacion.APROBADA)
-            and a.labor.id_labor == labor.id_labor
-            and inicio <= a.fecha <= fin
-        )
-        return asignados >= labor.trabajadores_requeridos
+
+        for a in self.asignaciones:
+            if (
+                a is not excluir
+                and a.estado in (EstadoAsignacion.PENDIENTE, EstadoAsignacion.APROBADA)
+                and a.labor.id_labor == labor.id_labor
+                and inicio <= a.fecha <= fin
+            ):
+                return True
+
+        return False
 
     def labores_a_cubrir(self, fecha):
         return [l for l in self.labores if not self.labor_completa_en_periodo(l, fecha)]

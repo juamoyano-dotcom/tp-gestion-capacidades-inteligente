@@ -109,7 +109,7 @@ Sus responsabilidades son:
 - Definir las habilidades necesarias.
 - Definir las credenciales requeridas.
 - Asociar la labor con un sector o área de trabajo.
-- Indicar su frecuencia (`DIARIA` o `SEMANAL`) y la cantidad de trabajadores requeridos.
+- Indicar su frecuencia (`DIARIA` o `SEMANAL`)
 - Proporcionar la validación de habilidades y credenciales propias de la labor.
 
 La duración debe ser mayor que cero. La labor comprueba los requisitos que le corresponden; `SistemaGestion` coordina además la validación de credenciales del sector, disponibilidad y carga.

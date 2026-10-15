@@ -21,10 +21,13 @@ class Asignacion:
         self.labor = labor
         self.franja = franja
         self.fecha = fecha
-        self.estado = EstadoAsignacion.PENDIENTE
+        self._estado = EstadoAsignacion.PENDIENTE
         self.horas_asignadas = labor.duracion_horas
         self.motivo_rechazo = None
 
+    @property
+    def estado(self) -> EstadoAsignacion:
+        return self._estado 
 
     def aprobar(self, supervisor) -> None:
         from .supervisor import Supervisor
@@ -38,12 +41,12 @@ class Asignacion:
         if not isinstance(supervisor, Supervisor) :
             raise ValueError("Solo un Supervisor puede aprobar una asignación.")
 
-        if self.estado != EstadoAsignacion.PENDIENTE:
+        if self._estado != EstadoAsignacion.PENDIENTE:
             raise ValueError(
-                f"No se puede aprobar una asignación en estado '{self.estado.value}'."
+                f"No se puede aprobar una asignación en estado '{self._estado.value}'."
             )
 
-        self.estado = EstadoAsignacion.APROBADA
+        self._estado = EstadoAsignacion.APROBADA
         self.trabajador.agregar_asignacion(self) 
 
     def rechazar(self, supervisor, motivo=""):
@@ -52,12 +55,12 @@ class Asignacion:
         if not isinstance(supervisor, Supervisor):
             raise ValueError("Solo un Supervisor puede rechazar una asignación.")
 
-        if self.estado != EstadoAsignacion.PENDIENTE:
+        if self._estado != EstadoAsignacion.PENDIENTE:
             raise ValueError(
-                f"No se puede rechazar una asignación en estado '{self.estado.value}'."
+                f"No se puede rechazar una asignación en estado '{self._estado.value}'."
             )
 
-        self.estado = EstadoAsignacion.RECHAZADA
+        self._estado = EstadoAsignacion.RECHAZADA
         self.motivo_rechazo = motivo       
 
     def __repr__(self) -> str:
