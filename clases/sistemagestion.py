@@ -4,6 +4,7 @@ from .asignacion import Asignacion, EstadoAsignacion
 from .labor import Labor, Frecuencia
 from .sectortrabajo import SectorTrabajo
 from .franjahoraria import FranjaHoraria
+from .cola import Cola
 from .excepciones import (
     ErrorAsignacion,
     CapacidadNoConfigurada,
@@ -32,6 +33,10 @@ class SistemaGestion:
         self.areas = []
         self.asignaciones = []
         self.capacidades_franja = {}
+        # Propuestas en orden de llegada. Es una vista de atención sobre
+        # self.asignaciones (que sigue siendo la fuente de verdad): solo guarda
+        # el orden en que el supervisor debe resolverlas.
+        self.cola_pendientes = Cola()
 
 
     def registrar_trabajador(self, trabajador):
@@ -240,6 +245,7 @@ class SistemaGestion:
         self.verificar_conflictos(nueva_asignacion)
 
         self.asignaciones.append(nueva_asignacion)
+        self.cola_pendientes.encolar(nueva_asignacion)   # queda en fila para ser resuelta en orden de llegada
         return nueva_asignacion
 
     def aprobar_asignacion(self, supervisor, asignacion):   # + NUEVO (método completo)
@@ -265,6 +271,31 @@ class SistemaGestion:
                 self.verificar_conflictos(pendiente)
             except ErrorAsignacion as e:
                 supervisor.rechazar_asignacion(pendiente, f"Descartada automáticamente: {e}")
+
+    def procesar_siguiente(self, supervisor):
+        """Resuelve la propuesta más antigua de la cola de pendientes.
+
+        Desencola hasta encontrar una que siga Pendiente. Las que ya no lo están
+        se descartan en silencio: pudieron ser aprobadas a mano con
+        aprobar_asignacion, o rechazadas por la cascada de otra aprobación,
+        mientras seguían dentro de la cola.
+
+        Con la propuesta elegida intenta aprobarla (aprobar_asignacion revalida
+        y hace la cascada). Si choca con lo ya aprobado, la rechaza con el motivo.
+
+        Devuelve la asignación resuelta (mirar su `estado` para saber si quedó
+        Aprobada o Rechazada), o None si no había propuestas por resolver.
+        """
+        while not self.cola_pendientes.esta_vacia():
+            asignacion = self.cola_pendientes.desencolar()
+            if asignacion.estado != EstadoAsignacion.PENDIENTE:
+                continue
+            try:
+                self.aprobar_asignacion(supervisor, asignacion)
+            except ErrorAsignacion as e:
+                supervisor.rechazar_asignacion(asignacion, f"Rechazada al procesar la cola: {e}")
+            return asignacion
+        return None
 
     def buscar_disponibles(self, labor, franja, fecha) -> list:
         if labor is None or franja is None:

@@ -24,3 +24,11 @@ class CargaHorariaExcedida(ErrorAsignacion):
 
 class FranjaCompleta(ErrorAsignacion):
     """El área ya alcanzó su límite de personal en esa franja (regla 6)."""
+
+
+class ColaVacia(Exception):
+    """Se intentó desencolar o consultar el inicio de una Cola sin elementos.
+
+    No hereda de ErrorAsignacion: no es un rechazo de negocio de una asignación,
+    es un uso incorrecto de la estructura de datos.
+    """
