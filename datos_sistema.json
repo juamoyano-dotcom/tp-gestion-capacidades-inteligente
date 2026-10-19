@@ -1,0 +1,110 @@
+{
+  "sistema": {
+    "nombre": "Sistema de Gestión de Capacidades y Asignación Inteligente",
+    "version": "1.0"
+  },
+  "trabajadores": [
+    {
+      "id_trabajador": 1,
+      "tipo": "trabajador",
+      "nombre": "Ana",
+      "apellido": "García",
+      "fecha_nacimiento": "1990-01-15",
+      "max_horas_semanales": 40,
+      "habilidades": [
+        "Python",
+        "Mantenimiento eléctrico"
+      ],
+      "credenciales_profesionales": [
+        {
+          "nombre": "Seguridad Eléctrica",
+          "fecha_obtencion": "2024-01-01",
+          "fecha_expiracion": "2027-01-01"
+        }
+      ]
+    },
+    {
+      "id_trabajador": 2,
+      "tipo": "trabajador",
+      "nombre": "Luis",
+      "apellido": "Pérez",
+      "fecha_nacimiento": "1993-05-10",
+      "max_horas_semanales": 30,
+      "habilidades": [
+        "Python",
+        "Control de procesos"
+      ],
+      "credenciales_profesionales": [
+        {
+          "nombre": "Seguridad Eléctrica",
+          "fecha_obtencion": "2023-06-01",
+          "fecha_expiracion": "2026-06-01"
+        }
+      ]
+    },
+    {
+      "id_trabajador": 99,
+      "tipo": "supervisor",
+      "nombre": "María",
+      "apellido": "López",
+      "fecha_nacimiento": "1986-03-20",
+      "max_horas_semanales": 45,
+      "habilidades": [],
+      "credenciales_profesionales": []
+    }
+  ],
+  "areas": [
+    {
+      "id_sector": 1,
+      "nombre": "Planta de Ensamble Robótico",
+      "credenciales_obligatorias": [
+        "Seguridad Eléctrica"
+      ]
+    }
+  ],
+  "franjas_horarias": [
+    {
+      "id_franja": 1,
+      "nombre": "Mañana",
+      "hora_inicio": "08:00",
+      "hora_fin": "12:00"
+    },
+    {
+      "id_franja": 2,
+      "nombre": "Tarde",
+      "hora_inicio": "12:00",
+      "hora_fin": "16:00"
+    },
+    {
+      "id_franja": 3,
+      "nombre": "Noche",
+      "hora_inicio": "16:00",
+      "hora_fin": "20:00"
+    }
+  ],
+  "capacidades_por_franja": [
+    {
+      "id_sector": 1,
+      "id_franja": 1,
+      "limite_personal": 2
+    }
+  ],
+  "labores": [
+    {
+      "id_labor": 10,
+      "titulo": "Revisión de tablero eléctrico",
+      "descripcion": "Se debe validar el estado físico y eléctrico del tablero principal.",
+      "duracion_horas": 3,
+      "habilidades_requeridas": [
+        "Python",
+        "Mantenimiento eléctrico"
+      ],
+      "credenciales_requeridas": [
+        "Seguridad Eléctrica"
+      ],
+      "id_sector": 1,
+      "frecuencia": "Diaria"
+    }
+  ],
+  "asignaciones": []
+}
