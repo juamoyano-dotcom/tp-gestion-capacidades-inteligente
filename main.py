@@ -72,20 +72,31 @@ def crear_demo():
         sector=sector,
     )
 
+    labor_2 = Labor(
+        id_labor=11,
+        titulo="Calibración de sensores",
+        descripcion="Se deben calibrar los sensores de la línea de ensamble.",
+        duracion_horas=2,
+        habilidades_requeridas=["Python"],
+        credenciales_requeridas=["Seguridad Eléctrica"],
+        sector=sector,
+    )
+
     sistema.registrar_area(sector)
     sistema.registrar_trabajador(trabajador_1)
     sistema.registrar_trabajador(trabajador_2)
     sistema.registrar_labor(labor)
+    sistema.registrar_labor(labor_2)
     sistema.registrar_capacidad_franja(CapacidadFranjaArea(sector, franja, 2))
 
-    return sistema, sector, franja, trabajador_1, trabajador_2, supervisor, labor
+    return sistema, sector, franja, trabajador_1, trabajador_2, supervisor, labor, labor_2
 
 
 def main():
     print("=== Sistema de Gestión de Capacidades y Asignación Inteligente ===")
     print("\nSe configura un escenario realista con trabajadores, sector, labor y capacidad por franja.")
 
-    sistema, sector, franja, trabajador_1, trabajador_2, supervisor, labor = crear_demo()
+    sistema, sector, franja, trabajador_1, trabajador_2, supervisor, labor, labor_2 = crear_demo()
 
     print(f"\nÁrea registrada: {sector.nombre}")
     print(f"Franja activa: {franja.franja.descripcion} ({franja.hora_inicio} a {franja.hora_fin})")
@@ -95,27 +106,37 @@ def main():
     disponibles = sistema.buscar_disponibles(labor, franja, date(2026, 10, 6))
     print(f"\nTrabajadores disponibles para la labor en esa fecha y franja: {[t.nombre for t in disponibles]}")
 
-    print("\nPaso 1: El sistema propone la asignación.")
+    print("\nPaso 1: El sistema propone dos asignaciones. Cada una entra al final de la cola de pendientes.")
     asignacion = sistema.proponer_asignacion(
         trabajador_1,
         labor,
         franja,
         date(2026, 10, 6),
     )
+    asignacion_2 = sistema.proponer_asignacion(
+        trabajador_1,
+        labor_2,
+        franja,
+        date(2026, 10, 7),
+    )
     print(f"Asignación creada: {asignacion}")
-    print(f"Estado actual: {asignacion.estado.value}")
+    print(f"Asignación creada: {asignacion_2}")
+    print(f"Estado actual de la primera: {asignacion.estado.value}")
     print(f"Horas comprometidas en la semana del trabajador: {sistema.horas_comprometidas(trabajador_1, date(2026, 10, 6))}")
+    print(f"Primera de la cola (la que se resolverá antes): {sistema.cola_pendientes.inicio()}")
 
-    print("\nPaso 2: La asignación queda pendiente hasta que un supervisor la formaliza.")
+    print("\nPaso 2: Las asignaciones quedan pendientes hasta que un supervisor las resuelve.")
     print(f"Antes de la aprobación, las asignaciones del trabajador son: {trabajador_1.asignaciones}")
 
-    print("\nPaso 3: El supervisor aprueba la asignación.")
-    supervisor.formalizar_asignacion(asignacion)
-    print(f"Asignación final: {asignacion}")
+    print("\nPaso 3: El supervisor procesa la cola, de la más antigua a la más nueva.")
+    resuelta = sistema.procesar_siguiente(supervisor)
+    while resuelta is not None:
+        print(f"Resuelta: {resuelta}")
+        resuelta = sistema.procesar_siguiente(supervisor)
     print(f"Trabajador luego de la aprobación: {trabajador_1.asignaciones}")
 
     print("\n=== Resumen final ===")
-    print(f"- Estado final de la asignación: {asignacion.estado.value}")
+    print(f"- Estado final de las asignaciones: {asignacion.estado.value}, {asignacion_2.estado.value}")
     print(f"- Horas registradas para la semana: {sistema.horas_comprometidas(trabajador_1, date(2026, 10, 6))}")
     print(f"- Cantidad de asignaciones en el sistema: {len(sistema.asignaciones)}")
 
