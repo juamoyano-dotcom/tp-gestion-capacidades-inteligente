@@ -37,6 +37,9 @@ class SistemaGestion:
         # self.asignaciones (que sigue siendo la fuente de verdad): solo guarda
         # el orden en que el supervisor debe resolverlas.
         self.cola_pendientes = Cola()
+        # Raíz del organigrama de la empresa. No es un área de trabajo real ni
+        # se registra en self.areas: solo es el punto de partida del árbol.
+        self.organigrama = SectorTrabajo(0, "IIT", codigo="")
 
 
     def registrar_trabajador(self, trabajador):
@@ -55,6 +58,11 @@ class SistemaGestion:
         for a in self.areas:
             if a.id == area.id:
                 raise ValueError("Ya existe un área con ese identificador.")
+        # Si el área tiene código, se ubica también en el organigrama. Se hace
+        # ANTES del append: si el código es inválido, duplicado o sin padre,
+        # lanza ValueError y no queda registrada a medias.
+        if area.codigo is not None:
+            self.organigrama.agregar_subsector(area)
         self.areas.append(area)
 
     def registrar_capacidad_franja(self, capacidad_franja):
@@ -62,6 +70,50 @@ class SistemaGestion:
         if clave in self.capacidades_franja:
             raise ValueError("Ya existe una capacidad para ese área y franja horaria.")
         self.capacidades_franja[clave] = capacidad_franja
+
+    # ---------- Organigrama de sectores ----------
+
+    def _obtener_sector(self, codigo_sector):
+        sector = self.organigrama.buscar(codigo_sector)
+        if sector is None or sector is self.organigrama:
+            raise ValueError(f"No existe un sector con el código '{codigo_sector}'.")
+        return sector
+
+    def asignar_trabajador_a_sector(self, trabajador, codigo_sector) -> None:
+        """Ubica a un trabajador (todavía sin sector) en el sector con ese código."""
+        if not any(t.id_trabajador == trabajador.id_trabajador for t in self.trabajadores):
+            raise ValueError("El trabajador no está registrado en el sistema.")
+        sector = self._obtener_sector(codigo_sector)
+        actual = self.organigrama.sector_de(trabajador)
+        if actual is not None:
+            raise ValueError(
+                f"El trabajador ya pertenece al sector '{actual.codigo}'. Para cambiarlo usar trasladar_trabajador."
+            )
+        sector.agregar_trabajador(trabajador)
+
+    def trasladar_trabajador(self, trabajador, codigo_destino) -> None:
+        """Mueve al trabajador a otro sector. Su id_trabajador no cambia."""
+        destino = self._obtener_sector(codigo_destino)      # se valida ANTES de sacarlo del origen
+        origen = self.organigrama.sector_de(trabajador)
+        if origen is None:
+            raise ValueError("El trabajador no pertenece a ningún sector. Usar asignar_trabajador_a_sector.")
+        if origen is destino:
+            return
+        origen.quitar_trabajador(trabajador)
+        destino.agregar_trabajador(trabajador)
+
+    def sector_de(self, trabajador):
+        """Sector al que pertenece el trabajador, o None si no tiene."""
+        return self.organigrama.sector_de(trabajador)
+
+    def contar_trabajadores_sector(self, codigo_sector) -> int:
+        """Trabajadores del sector y de todos sus subsectores."""
+        return self._obtener_sector(codigo_sector).contar_trabajadores()
+
+    def horas_comprometidas_sector(self, codigo_sector, fecha):
+        """Suma de horas comprometidas en la semana de `fecha` por toda la rama del sector."""
+        sector = self._obtener_sector(codigo_sector)
+        return sum(self.horas_comprometidas(t, fecha) for t in sector.trabajadores_de_rama())
 
     @staticmethod
     def misma_franja(franja_a, franja_b) -> bool:
