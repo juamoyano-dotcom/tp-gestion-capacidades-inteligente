@@ -22,6 +22,13 @@ class SectorTrabajo:
     "0101" Ensamblado). La raíz de la empresa tiene código "" (vacío).
     `codigo=None` significa que el sector todavía no forma parte del árbol.
 
+    `padre` apunta al sector del nivel superior (None en la raíz y en los
+    sectores que todavía no están en el árbol). Lo asigna agregar_subsector al
+    insertar el sector; no hay que tocarlo a mano. Gracias a él un sector
+    "hereda" las credenciales obligatorias de todos sus ancestros (ver
+    `credenciales_requeridas`): una norma cargada en "Producción" rige también
+    para "Ensamblado" y "Calidad" sin repetirla en cada sector.
+
     Los trabajadores asignados a un sector se guardan SOLO acá (`trabajadores`),
     no en Trabajador: así hay una única fuente de verdad de a qué sector
     pertenece cada uno, y se evita el import circular con trabajador.py.
@@ -35,6 +42,7 @@ class SectorTrabajo:
         self.nombre = nombre
         self.credenciales_obligatorias = credenciales_obligatorias if credenciales_obligatorias is not None else []
         self.codigo = codigo
+        self.padre = None          # lo asigna agregar_subsector al insertar el sector en el árbol
         self.subsectores = {}      # segmento (str de 2 dígitos) -> SectorTrabajo hijo
         self.trabajadores = []     # trabajadores asignados DIRECTAMENTE a este sector
 
@@ -47,16 +55,30 @@ class SectorTrabajo:
                 f"en grupos de {LARGO_SEGMENTO} (ej: '01', '0102')."
             )
 
-    # ---------- Reglas de credenciales (sin cambios) ----------
+    # ---------- Reglas de credenciales ----------
+
+    def credenciales_requeridas(self) -> list:
+        """Credenciales que se exigen en este sector: las propias más las heredadas de todos sus ancestros.
+
+        Recursivo hacia arriba. Caso base: sin padre (raíz o sector fuera del
+        árbol) solo cuentan las propias, que es el comportamiento de siempre.
+        Se calcula cada vez (no se guarda), así que si se agrega una
+        credencial a un sector, sus descendientes la heredan automáticamente.
+        Primero van las del ancestro más alto, sin repetidos.
+        """
+        heredadas = self.padre.credenciales_requeridas() if self.padre is not None else []
+        propias = [c for c in self.credenciales_obligatorias if c not in heredadas]
+        return heredadas + propias
 
     def trabajador_cumple_credenciales(self, trab: Trabajador, fecha: date) -> bool:
-        """Indica si el trabajador tiene activas en `fecha` todas las credenciales del área.
+        """Indica si el trabajador tiene activas en `fecha` todas las credenciales exigidas en el área.
 
+        Incluye las heredadas de los sectores superiores (ver credenciales_requeridas).
         Delega en Trabajador.credenciales_activas (encapsulamiento): el sector
         no necesita conocer cómo se guardan las credenciales.
         """
         # verifica directo con el método de Trabajador --> encapsulamiento
-        return trab.credenciales_activas(self.credenciales_obligatorias, fecha)
+        return trab.credenciales_activas(self.credenciales_requeridas(), fecha)
 
     # ---------- Árbol: estructura ----------
 
@@ -79,6 +101,7 @@ class SectorTrabajo:
             if segmento in self.subsectores:
                 raise ValueError(f"Ya existe un sector con el código '{codigo}'.")
             self.subsectores[segmento] = sector
+            sector.padre = self
         else:                                           # caso recursivo: bajar un nivel
             hijo = self.subsectores.get(segmento)
             if hijo is None:
